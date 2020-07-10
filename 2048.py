@@ -20,18 +20,38 @@ w = width // 4
 
 # Grid handling
 def blankGrid():
+	"""
+	Create blank 4x4 grid
+
+	Returns:
+		list: 2d list filled with zeroes
+	"""
 	return [[0 for _ in range(4)] for _ in range(4)]
 
 
-def copyGrid(grid):
-	return grid[:]
-
-
 def flipGrid(grid):
+	"""
+	Returns the grid passed, flipped on the y axis (|)
+
+	Args:
+		grid (list): 2d list
+
+	Returns:
+		list: 2d list
+	"""
 	return [row[::-1] for row in grid]
 
 
 def rotateGrid(grid):
+	"""
+	Returns a list with the rows and columns of the passed list swapped
+
+	Args:
+		grid (list): 2d list
+
+	Returns:
+		list: 2d list
+	"""
 	newGrid = blankGrid()
 	for i in range(len(grid)):
 		for j in range(len(grid[i])):
@@ -40,10 +60,19 @@ def rotateGrid(grid):
 
 
 def drawGrid(win):
+	"""
+	Draws the grid lines and numbers to the screen
+
+	Args:
+		win (Surface): Main display surface
+	"""
 	global grid
 	for i in range(4):
 		for j in range(4):
+			# Draw grid squares
 			pygame.draw.rect(win, BLACK, (i * w, j * w, w, w), 2)
+
+			# Draw numbers in squares
 			val = grid[i][j]
 			if val != 0:
 				s = str(val)
@@ -58,42 +87,69 @@ def drawGrid(win):
 
 # Game logic handling
 def isGameLost():
+	"""
+	Checks if the game is lost
+
+	Returns:
+		bool: Whether the game is lost
+	"""
 	global grid
 	for i in range(4):
 		for j in range(4):
-			if grid[i][j] == 0:
+			if grid[i][j] == 0:  # Spot still available
 				return False
+			# Two identical numbers are adjacent vertically
 			if i != 3 and grid[i][j] == grid[i + 1][j]:
 				return False
+			# Two identical numbers are adjacent horizontally
 			if j != 3 and grid[i][j] == grid[i][j + 1]:
 				return False
 	return True
 
 
 def isGameWon():
+	"""
+	Checks if the game is won
+
+	Returns:
+		bool: Whether the game is won
+	"""
 	global grid
 	for row in grid:
-		if 2048 in grid:
+		if 2048 in grid:  # Win only if a square that has 2048 exists
 			return True
 	return False
 
 
 def addNumber():
+	"""
+	Add a random number to the grid
+	"""
 	global grid
 	options = []
 	for i in range(4):
 		for j in range(4):
 			if grid[i][j] == 0:
-				options.append([i, j])
+				options.append([i, j])  # Get list of empty spots
 
 	if len(options) > 0:
 		spot = random.choice(options)
 		r = random.random()
 		i, j = spot
-		grid[i][j] = 2 if r > 0.1 else 4
+		grid[i][j] = 2 if r > 0.1 else 4  # 10% chance of 4 else 2
 
 
 def compare(a, b):
+	"""
+	Checks if two 2d lists are different
+
+	Args:
+		a (list): 2d list
+		b (list): 2d list
+
+	Returns:
+		bool: Whether the passed in lists are different
+	"""
 	for i in range(4):
 		for j in range(4):
 			if a[i][j] != b[i][j]:
@@ -102,14 +158,32 @@ def compare(a, b):
 
 
 def slide(row):
-	arr = [el for el in row if el]
-	missing = 4 - len(arr)
-	zeroes = [0 for _ in range(missing)]
+	"""
+	Slide the elements in the row so there are no 0s in between
+
+	Args:
+		row (list): Row of a 2d list
+
+	Returns:
+		list: Passed in row with slid elements
+	"""
+	arr = [el for el in row if el]  # Row with no zeroes
+	missing = 4 - len(arr)  # Number of zeroes removed from the original row
+	zeroes = [0 for _ in range(missing)]  # List filled with set amount of zeroes
 	arr = zeroes + arr
 	return arr
 
 
 def combine(row):
+	"""
+	Combine identical adjacent numbers into one doubled number and add to score
+
+	Args:
+		row (list): Row of a 2d list
+
+	Returns:
+		list: Row with identical elements combined
+	"""
 	global score
 	for i in range(3, 0, -1):
 		a = row[i]
@@ -122,6 +196,15 @@ def combine(row):
 
 
 def operate(row):
+	"""
+	Operate on a single row
+
+	Args:
+		row (list): Row of a 2d list
+
+	Returns:
+		list: Row that has been operated on
+	"""
 	row = slide(row)
 	row = combine(row)
 	row = slide(row)
@@ -135,12 +218,18 @@ gameOver = False
 
 
 def keyPressed(key):
+	"""
+	Function for handling key presses
+
+	Args:
+		key (pygame.key): Key that has been pressed
+	"""
 	global grid
 	flipped = False
 	rotated = False
 	played = True
 
-	if key == pygame.K_DOWN:
+	if key == pygame.K_DOWN:  # Default case
 		# Do nothing
 		os.system('cls')
 
@@ -162,7 +251,7 @@ def keyPressed(key):
 		played = False
 
 	if played:
-		past = copyGrid(grid)
+		past = grid[:]
 		for i in range(4):
 			grid[i] = operate(grid[i])
 		changed = compare(past, grid)
@@ -178,8 +267,14 @@ def keyPressed(key):
 
 
 def draw(win):
+	"""
+	Draws everything to the screen
+
+	Args:
+		win (Surface): Main display surface
+	"""
 	global gameOver
-	win.fill(WHITE)
+	win.fill(WHITE)  # Background
 
 	drawGrid(win)
 
@@ -195,7 +290,7 @@ def draw(win):
 		msg = 'YOU WON!'
 		gameOver = True
 
-	if gameOver:
+	if gameOver:  # Draw message in the middle of the screen
 		font = pygame.font.Font(None, 100)
 		label = font.render(msg, 1, BLACK)
 		x = width // 2 - label.get_width() // 2
@@ -206,8 +301,13 @@ def draw(win):
 
 
 def main():
+	"""
+	Main function
+	"""
 	run = True
 	clock = pygame.time.Clock()
+
+	# Add 2 numbers at the beginning
 	addNumber()
 	addNumber()
 
@@ -228,6 +328,6 @@ def main():
 
 
 main()
-pygame.time.delay(1500)
+pygame.time.delay(1500) # Delay to see end-game message
 pygame.quit()
 quit()
