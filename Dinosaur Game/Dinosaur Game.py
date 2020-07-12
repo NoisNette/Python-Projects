@@ -12,8 +12,8 @@ win = pygame.display.set_mode((width, height))
 pygame.display.set_caption('Dinosaur Game')
 
 # Load images
-ground = pygame.image.load(os.path.join('assets', 'floor-1.png'))
-ground = pygame.transform.scale(ground, (width, ground.get_height()))
+ground = pygame.image.load(os.path.join('assets', 'floor-1.png')).convert()
+ground_img = pygame.transform.scale(ground, (width, ground.get_height()))
 
 dino_jump = pygame.image.load(os.path.join('assets', 'jump.png'))
 
@@ -22,10 +22,13 @@ dino_run.append(pygame.image.load(os.path.join('assets', 'run1.png')))
 dino_run.append(pygame.image.load(os.path.join('assets', 'run2.png')))
 
 dino_duck = []
-dino_duck.append(pygame.image.load(os.path.join('assets', 'low1small.png')))
-dino_duck.append(pygame.image.load(os.path.join('assets', 'low2small.png')))
+dino_duck.append(pygame.image.load(os.path.join('assets', 'low1.png')))
+dino_duck.append(pygame.image.load(os.path.join('assets', 'low2.png')))
 
-cactus1 = pygame.image.load(os.path.join('assets', 'CACTUS1.png'))
+cactuses = []
+for i in range(1, 6):
+	cactus = pygame.image.load(os.path.join('assets', 'CACTUS{}.png'.format(i)))
+	cactuses.append(cactus)
 
 
 # Constants
@@ -40,6 +43,9 @@ score = 0
 obstacles = []
 frameCount = 0
 animation_count = 0
+velocity = 7
+ground1_x = 0
+ground2_x = width
 
 
 class Dino:
@@ -72,7 +78,7 @@ class Dino:
 			self.img = dino_jump
 		elif self.ducked:
 			self.img = dino_duck[animation_count]
-			self.y = runY - self.img.get_height() + 4
+			self.y = runY - self.img.get_height() + 2
 		else:
 			self.img = dino_run[animation_count]
 
@@ -90,9 +96,9 @@ class Dino:
 		self.ducked = False
 
 
-class Obstacle:
+class Cactus:
 	def __init__(self):
-		self.img = cactus1
+		self.img = random.choice(cactuses)
 		self.mask = pygame.mask.from_surface(self.img)
 
 		self.w = self.img.get_width()
@@ -100,12 +106,11 @@ class Obstacle:
 		self.x = width
 		self.y = runY - self.h
 
-		self.vel = 7
 		self.hit = False
 		self.passed = False
 
 	def draw(self, win):
-		self.x -= self.vel
+		self.x -= velocity
 
 		win.blit(self.img, (self.x, self.y))
 
@@ -120,12 +125,29 @@ class Obstacle:
 			self.hit = True
 
 
+def drawGround(win):
+	global ground1_x
+	global ground2_x
+
+	ground1_x -= velocity
+	ground2_x -= velocity
+
+	if ground1_x < -width:
+		ground1_x = width
+	
+	if ground2_x < -width:
+		ground2_x = width
+
+	win.blit(ground_img, (ground1_x, runY))
+	win.blit(ground_img, (ground2_x, runY))
+	
+
 def draw(win):
 	global score
 	win.fill(WHITE)
 
 	# Draw ground
-	win.blit(ground, (0, runY))
+	drawGround(win)
 
 	# Draw obstacles
 	for obstacle in obstacles:
@@ -180,7 +202,7 @@ def main():
 					dino.unduck()
 
 		if frameCount % 60 == 0:
-			obstacles.append(Obstacle())
+			obstacles.append(Cactus())
 
 		if frameCount % 10 == 0:
 			animation_count = (animation_count + 1) % 2
