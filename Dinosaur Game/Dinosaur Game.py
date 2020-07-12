@@ -25,6 +25,8 @@ dino_duck = []
 dino_duck.append(pygame.image.load(os.path.join('assets', 'low1.png')))
 dino_duck.append(pygame.image.load(os.path.join('assets', 'low2.png')))
 
+dino_death = pygame.image.load(os.path.join('assets', 'death.png'))
+
 cactuses = []
 for i in range(1, 6):
 	cactus = pygame.image.load(os.path.join('assets', 'CACTUS{}.png'.format(i)))
@@ -34,6 +36,7 @@ enemies = []
 enemies.append(pygame.image.load(os.path.join('assets', 'enemy1.png')))
 enemies.append(pygame.image.load(os.path.join('assets', 'enemy2.png')))
 
+retry_img = pygame.transform.scale(pygame.image.load(os.path.join('assets', '1x-restart.png')), (64, 57))
 
 # Constants
 BLACK = (0, 0, 0)
@@ -50,6 +53,8 @@ animation_count = 0
 velocity = 7
 ground1_x = 0
 ground2_x = width
+gameOver = False
+
 
 class Dino:
 	def __init__(self):
@@ -57,7 +62,7 @@ class Dino:
 		self.mask = pygame.mask.from_surface(self.img)
 
 		self.x = 150
-		self.y = runY - self.img.get_height()
+		self.y = runY - self.img.get_height() + 4
 		self.w = self.img.get_width()
 		self.h = self.img.get_height()
 
@@ -87,6 +92,9 @@ class Dino:
 		else:
 			self.img = dino_run[animation_count]
 
+		if gameOver:
+			self.img = dino_death
+
 		win.blit(self.img, (self.x, self.y))
 
 	def jump(self):
@@ -96,20 +104,17 @@ class Dino:
 	def duck(self):
 		if not self.midair:
 			self.ducked = True
-   
-	def unduck(self):
-		self.ducked = False
 
 
 class Cactus:
 	def __init__(self):
-		self.img = chooseCactusImage()
+		self.img = self.chooseCactusImage()
 		self.mask = pygame.mask.from_surface(self.img)
 
 		self.w = self.img.get_width()
 		self.h = self.img.get_height()
 		self.x = width
-		self.y = runY - self.h
+		self.y = runY - self.h + 5
 
 		self.hit = False
 		self.passed = False
@@ -117,7 +122,7 @@ class Cactus:
 	def draw(self, win):
 		self.x -= velocity
 
-		win.blit(self.img, (self.x, self.y + 5))
+		win.blit(self.img, (self.x, self.y))
 
 		# Check for offscreen
 		if self.x + self.w < 0:
@@ -129,6 +134,13 @@ class Cactus:
 		if self.mask.overlap(dino.mask, (xoff, yoff)) != None:
 			self.hit = True
 
+	def chooseCactusImage(self):
+		perc = random.random()
+		if perc > 0.9:
+			return cactuses[-1]
+		else:
+			return random.choice(cactuses[:-1])
+
 class Enemy:
 	def __init__(self):
 		self.img = enemies[animation_count]
@@ -137,7 +149,7 @@ class Enemy:
 		self.w = self.img.get_width()
 		self.h = self.img.get_height()
 		self.x = width
-		self.y = runY - self.h
+		self.y = self.getHeight()
 
 		self.hit = False
 		self.passed = False
@@ -159,13 +171,10 @@ class Enemy:
 		if self.mask.overlap(dino.mask, (xoff, yoff)) != None:
 			self.hit = True
 
-def chooseCactusImage():
-	perc = random.random()
-	if perc > 0.9:
-		img = cactuses[-1]
-	else:
-		img = random.choice(cactuses[:-1])
-	return img
+	def getHeight(self):
+		y = runY - self.h
+		gap = random.choice([0, 45, 65])
+		return y - gap
 
 
 def drawGround(win):
@@ -183,10 +192,9 @@ def drawGround(win):
 
 	win.blit(ground_img, (ground1_x, runY))
 	win.blit(ground_img, (ground2_x, runY))
-	
+
 
 def draw(win):
-	global score
 	win.fill(WHITE)
 
 	# Draw ground
@@ -200,15 +208,15 @@ def draw(win):
 		# Increment score if obstacle passed and not hit
 		if not obstacle.hit and not obstacle.passed:
 			if dino.x >= obstacle.x + obstacle.w:
-				score += 1
 				obstacle.passed = True  # Make sure every obstacle is only counted once
 
 	# Draw dino
 	dino.draw(win)
 
 	# Draw score
-	font = pygame.font.Font(None, 64)
-	label = font.render('SCORE: {}'.format(score), 1, BLACK)
+	score_display = str(score).rjust(5, '0')
+	font = pygame.font.Font('assets/font/pixelmix.ttf', 24)
+	label = font.render(score_display, 1, BLACK)
 	win.blit(label, (5, 5))
 
 	pygame.display.update()
@@ -221,11 +229,21 @@ dino = Dino()
 def main():
 	global frameCount
 	global animation_count
+	global score
+	global velocity
+	global gameOver
+
 	run = True
 	clock = pygame.time.Clock()
 
 	while run:
 		clock.tick(FPS)
+
+		for obstacle in obstacles:
+			if obstacle.hit:
+				gameOver = True
+				velocity = 0
+				run = False
 
 		draw(win)
 
@@ -242,20 +260,30 @@ def main():
 
 			if event.type == pygame.KEYUP:
 				if event.key == pygame.K_DOWN or event.key == pygame.K_s:
-					dino.unduck()
+					dino.ducked = False
 
-		if frameCount % 60 == 0:
-			obstacle_choices = [Cactus(), Cactus()]
 
-			if score > 15: # Possibility of Pterodactyl obstacle after 15 points
-				obstacle_choices.append(Enemy())
+		if not gameOver:
+			# Add a new obstacle every second
+			if frameCount % 60 == 0:
+				obstacle_choices = [Cactus(), Cactus(), Cactus()]
 
-			obstacles.append(random.choice(obstacle_choices))
+				if score > 200: # 25% Possibility of Pterodactyl obstacle after 200 points
+					obstacle_choices.append(Enemy())
 
-		if frameCount % 10 == 0:
-			animation_count = (animation_count + 1) % 2
+				obstacles.append(random.choice(obstacle_choices))
 
-		frameCount += 1
+			# Animation
+			if frameCount % 10 == 0:
+				animation_count = (animation_count + 1) % 2
+
+			# Incrementing score
+			if frameCount % 5 == 0:
+				score += 1
+
+			frameCount += 1
+
 
 
 main()
+pygame.time.delay(750)
