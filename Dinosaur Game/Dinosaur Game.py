@@ -58,6 +58,9 @@ gameOver = False
 
 class Dino:
 	def __init__(self):
+		"""
+		Constructor for Dino class
+		"""
 		self.img = dino_run[animation_count]
 		self.mask = pygame.mask.from_surface(self.img)
 
@@ -74,40 +77,59 @@ class Dino:
 		self.ducked = False
 
 	def draw(self, win):
+		"""
+		Draw Dino to screen
+
+		:param win: Main display surface
+		:type win: Surface
+		"""
 		global animation_count
+
+		# Apply gravity
 		self.vel += self.grav
 		self.y += self.vel
 
+		# Don't let dino fall down
 		if self.y + self.h > runY:
 			self.y = runY - self.h
 			self.vel = 0
 
+		# Check if dino is midair
 		self.midair = self.y + self.h < runY
 
 		if self.midair:
-			self.img = dino_jump
+			self.img = dino_jump  # Image if dino is midair
 		elif self.ducked:
 			self.img = dino_duck[animation_count]
-			self.y = runY - self.img.get_height() + 2
+			self.y = runY - self.img.get_height() + 2  # Lower y position to account for ducking
 		else:
-			self.img = dino_run[animation_count]
+			self.img = dino_run[animation_count]  # Regular running image
 
 		if gameOver:
-			self.img = dino_death
+			self.img = dino_death  # Death image if game is over
 
 		win.blit(self.img, (self.x, self.y))
 
 	def jump(self):
+		"""
+		Apply jump force to dino
+		"""
 		if not self.midair:
 			self.vel += self.lift
 
 	def duck(self):
+		"""
+		Duck the dino if not midair
+		"""
 		if not self.midair:
 			self.ducked = True
 
 
 class Cactus:
 	def __init__(self):
+		"""
+		Constructor for Cactus class
+		"""
 		self.img = self.chooseCactusImage()
 		self.mask = pygame.mask.from_surface(self.img)
 
@@ -120,6 +142,14 @@ class Cactus:
 		self.passed = False
 
 	def draw(self, win):
+		"""
+		Draw Cactus to the screen
+
+		:param win: Main display surface
+		:type win: Surface
+		"""
+
+		# Move cactus
 		self.x -= velocity
 
 		win.blit(self.img, (self.x, self.y))
@@ -129,20 +159,37 @@ class Cactus:
 			obstacles.remove(self)
 
 	def collide(self, dino):
+		"""
+		Check if cactus collides with dino
+
+		:param dino: Dinosaur object
+		:type dino: Dino
+		"""
+
+		# Calculate distance between top left points for self and dino, used for mask.overlap
 		xoff = dino.x - self.x
 		yoff = dino.y - self.y
 		if self.mask.overlap(dino.mask, (xoff, yoff)) != None:
 			self.hit = True
 
 	def chooseCactusImage(self):
+		"""
+		Determine what cactus will be spawned
+
+		:return: Image of this cactus
+		:rtype: Surface
+		"""
 		perc = random.random()
-		if perc > 0.9:
+		if perc > 0.9:  # 10 % of triple-cactus spawning
 			return cactuses[-1]
 		else:
 			return random.choice(cactuses[:-1])
 
 class Enemy:
 	def __init__(self):
+		"""
+		Constructor for Enemy class (Pterodactyl)
+		"""
 		self.img = enemies[animation_count]
 		self.mask = pygame.mask.from_surface(self.img)
 
@@ -155,8 +202,17 @@ class Enemy:
 		self.passed = False
 
 	def draw(self, win):
+		"""
+		Draw Enemy to the screen
+
+		:param win: Main display surface
+		:type win: Surface
+		"""
+
+		# Move pterodactyl
 		self.x -= velocity
 
+		# Update image
 		self.img = enemies[animation_count]
 
 		win.blit(self.img, (self.x, self.y))
@@ -166,35 +222,63 @@ class Enemy:
 			obstacles.remove(self)
 
 	def collide(self, dino):
+		"""
+		Check if enemy collides with dino
+
+		:param dino: Dinosaur object
+		:type dino: Dino
+		"""
+
+		# Calculate distance between top left points for self and dino, used for mask.overlap
 		xoff = dino.x - self.x
 		yoff = dino.y - self.y
 		if self.mask.overlap(dino.mask, (xoff, yoff)) != None:
 			self.hit = True
 
 	def getHeight(self):
+		"""
+		Get height on which the pterodactyl will be
+
+		:return: y coordinate of self
+		:rtype: int
+		"""
 		y = runY - self.h
-		gap = random.choice([0, 45, 65])
+		gap = random.choice([0, 45, 65])  # On ground, duckable, runnable
 		return y - gap
 
 
 def drawGround(win):
+	"""
+	Draw and animate ground using 2 consecutive identical images
+
+	:param win: Main display surface
+	:type win: Surface
+	"""
 	global ground1_x
 	global ground2_x
 
+	# Move both ground images
 	ground1_x -= velocity
 	ground2_x -= velocity
 
+	# Reset position of ground images
 	if ground1_x < -width:
 		ground1_x = width
-	
 	if ground2_x < -width:
 		ground2_x = width
 
+	# Display both images
 	win.blit(ground_img, (ground1_x, runY))
 	win.blit(ground_img, (ground2_x, runY))
 
 
 def draw(win):
+	"""
+	Draw everything to the screen
+
+	:param win: Main display surface
+	:type win: Surface
+	"""
 	win.fill(WHITE)
 
 	# Draw ground
@@ -205,16 +289,12 @@ def draw(win):
 		obstacle.draw(win)
 		obstacle.collide(dino)
 
-		# Increment score if obstacle passed and not hit
-		if not obstacle.hit and not obstacle.passed:
-			if dino.x >= obstacle.x + obstacle.w:
-				obstacle.passed = True  # Make sure every obstacle is only counted once
 
 	# Draw dino
 	dino.draw(win)
 
 	# Draw score
-	score_display = str(score).rjust(5, '0')
+	score_display = str(score).rjust(5, '0')  # Pad score to width of 5
 	font = pygame.font.Font('assets/font/pixelmix.ttf', 24)
 	label = font.render(score_display, 1, BLACK)
 	win.blit(label, (5, 5))
@@ -227,6 +307,9 @@ dino = Dino()
 
 
 def main():
+	"""
+	Main function
+	"""
 	global frameCount
 	global animation_count
 	global score
@@ -239,6 +322,7 @@ def main():
 	while run:
 		clock.tick(FPS)
 
+		# Check for game over if any obstacle is hit
 		for obstacle in obstacles:
 			if obstacle.hit:
 				gameOver = True
@@ -247,17 +331,21 @@ def main():
 
 		draw(win)
 
+		# Event loop
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				quit()
 
 			if event.type == pygame.KEYDOWN:
+				# Jump if space, 'W' or up_arrow are pressed
 				if event.key == pygame.K_SPACE or event.key == pygame.K_w or event.key == pygame.K_UP:
 					dino.jump()
 
+				# Duck if 'S' or down_arrow are pressed
 				if event.key == pygame.K_DOWN or event.key == pygame.K_s:
 					dino.duck()
 
+			# Unduck when ducking key is released
 			if event.type == pygame.KEYUP:
 				if event.key == pygame.K_DOWN or event.key == pygame.K_s:
 					dino.ducked = False
@@ -286,4 +374,4 @@ def main():
 
 
 main()
-pygame.time.delay(750)
+pygame.time.delay(750)  # Delay for player to see where they died
