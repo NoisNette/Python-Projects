@@ -47,7 +47,6 @@ velocity = 7
 ground1_x = 0
 ground2_x = width
 
-
 class Dino:
 	def __init__(self):
 		self.img = dino_run[animation_count]
@@ -98,7 +97,7 @@ class Dino:
 
 class Cactus:
 	def __init__(self):
-		self.img = random.choice(cactuses)
+		self.img = chooseCactusImage()
 		self.mask = pygame.mask.from_surface(self.img)
 
 		self.w = self.img.get_width()
@@ -112,7 +111,7 @@ class Cactus:
 	def draw(self, win):
 		self.x -= velocity
 
-		win.blit(self.img, (self.x, self.y))
+		win.blit(self.img, (self.x, self.y + 5))
 
 		# Check for offscreen
 		if self.x + self.w < 0:
@@ -123,6 +122,14 @@ class Cactus:
 		yoff = dino.y - self.y
 		if self.mask.overlap(dino.mask, (xoff, yoff)) != None:
 			self.hit = True
+
+def chooseCactusImage():
+	perc = random.random()
+	if perc > 0.9:
+		img = cactuses[-1]
+	else:
+		img = random.choice(cactuses[:-1])
+	return img
 
 
 def drawGround(win):
