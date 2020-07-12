@@ -22,9 +22,8 @@ dino_run.append(pygame.image.load(os.path.join('assets', 'run1.png')))
 dino_run.append(pygame.image.load(os.path.join('assets', 'run2.png')))
 
 dino_duck = []
-dino_duck.append(pygame.image.load(
-	os.path.join('assets', 'output-onlinepngtools.png')))
-dino_duck.append(pygame.image.load(os.path.join('assets', 'low2.png')))
+dino_duck.append(pygame.image.load(os.path.join('assets', 'low1small.png')))
+dino_duck.append(pygame.image.load(os.path.join('assets', 'low2small.png')))
 
 cactus1 = pygame.image.load(os.path.join('assets', 'CACTUS1.png'))
 
@@ -72,8 +71,8 @@ class Dino:
 		if self.midair:
 			self.img = dino_jump
 		elif self.ducked:
-			self.img = dino_duck[0]
-			self.y = runY - self.img.get_height()
+			self.img = dino_duck[animation_count]
+			self.y = runY - self.img.get_height() + 4
 		else:
 			self.img = dino_run[animation_count]
 
@@ -86,6 +85,9 @@ class Dino:
 	def duck(self):
 		if not self.midair:
 			self.ducked = True
+   
+	def unduck(self):
+		self.ducked = False
 
 
 class Obstacle:
@@ -112,12 +114,10 @@ class Obstacle:
 			obstacles.remove(self)
 
 	def collide(self, dino):
-		# TODO Fix collision
 		xoff = dino.x - self.x
 		yoff = dino.y - self.y
 		if self.mask.overlap(dino.mask, (xoff, yoff)) != None:
 			self.hit = True
-			print('HIT')
 
 
 def draw(win):
@@ -174,6 +174,10 @@ def main():
 
 				if event.key == pygame.K_DOWN or event.key == pygame.K_s:
 					dino.duck()
+
+			if event.type == pygame.KEYUP:
+				if event.key == pygame.K_DOWN or event.key == pygame.K_s:
+					dino.unduck()
 
 		if frameCount % 60 == 0:
 			obstacles.append(Obstacle())
