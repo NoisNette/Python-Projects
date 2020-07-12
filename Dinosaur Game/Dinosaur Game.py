@@ -30,6 +30,10 @@ for i in range(1, 6):
 	cactus = pygame.image.load(os.path.join('assets', 'CACTUS{}.png'.format(i)))
 	cactuses.append(cactus)
 
+enemies = []
+enemies.append(pygame.image.load(os.path.join('assets', 'enemy1.png')))
+enemies.append(pygame.image.load(os.path.join('assets', 'enemy2.png')))
+
 
 # Constants
 BLACK = (0, 0, 0)
@@ -56,9 +60,11 @@ class Dino:
 		self.y = runY - self.img.get_height()
 		self.w = self.img.get_width()
 		self.h = self.img.get_height()
+
 		self.vel = 0
 		self.grav = 1
 		self.lift = -15
+
 		self.midair = False
 		self.ducked = False
 
@@ -112,6 +118,36 @@ class Cactus:
 		self.x -= velocity
 
 		win.blit(self.img, (self.x, self.y + 5))
+
+		# Check for offscreen
+		if self.x + self.w < 0:
+			obstacles.remove(self)
+
+	def collide(self, dino):
+		xoff = dino.x - self.x
+		yoff = dino.y - self.y
+		if self.mask.overlap(dino.mask, (xoff, yoff)) != None:
+			self.hit = True
+
+class Enemy:
+	def __init__(self):
+		self.img = enemies[animation_count]
+		self.mask = pygame.mask.from_surface(self.img)
+
+		self.w = self.img.get_width()
+		self.h = self.img.get_height()
+		self.x = width
+		self.y = runY - self.h
+
+		self.hit = False
+		self.passed = False
+
+	def draw(self, win):
+		self.x -= velocity
+
+		self.img = enemies[animation_count]
+
+		win.blit(self.img, (self.x, self.y))
 
 		# Check for offscreen
 		if self.x + self.w < 0:
@@ -209,7 +245,12 @@ def main():
 					dino.unduck()
 
 		if frameCount % 60 == 0:
-			obstacles.append(Cactus())
+			obstacle_choices = [Cactus(), Cactus()]
+
+			if score > 15: # Possibility of Pterodactyl obstacle after 15 points
+				obstacle_choices.append(Enemy())
+
+			obstacles.append(random.choice(obstacle_choices))
 
 		if frameCount % 10 == 0:
 			animation_count = (animation_count + 1) % 2
