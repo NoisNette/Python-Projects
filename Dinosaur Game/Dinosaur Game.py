@@ -43,7 +43,6 @@ BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
 runY = 350
-FPS = 60
 
 # Variables
 score = 0
@@ -53,6 +52,7 @@ animation_count = 0
 velocity = 7
 ground1_x = 0
 ground2_x = width
+fps = 60
 gameOver = False
 
 
@@ -180,7 +180,7 @@ class Cactus:
 		:rtype: Surface
 		"""
 		perc = random.random()
-		if perc > 0.9:  # 10 % of triple-cactus spawning
+		if perc > 0.75:  # 25 % of triple-cactus spawning
 			return cactuses[-1]
 		else:
 			return random.choice(cactuses[:-1])
@@ -243,7 +243,7 @@ class Enemy:
 		:rtype: int
 		"""
 		y = runY - self.h
-		gap = random.choice([0, 45, 65])  # On ground, duckable, runnable
+		gap = 10 if random.random() > 0.75 else random.choice([45, 75])  # 25 % Chance of pterodactyl on ground
 		return y - gap
 
 
@@ -314,13 +314,14 @@ def main():
 	global animation_count
 	global score
 	global velocity
+	global fps
 	global gameOver
 
 	run = True
 	clock = pygame.time.Clock()
 
 	while run:
-		clock.tick(FPS)
+		clock.tick(fps)
 
 		# Check for game over if any obstacle is hit
 		for obstacle in obstacles:
@@ -364,6 +365,10 @@ def main():
 			# Animation
 			if frameCount % 10 == 0:
 				animation_count = (animation_count + 1) % 2
+
+			# Increase speed
+			if score % 150 == 0 and score > 0:
+				fps += 1
 
 			# Incrementing score
 			if frameCount % 5 == 0:
