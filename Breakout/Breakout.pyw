@@ -249,7 +249,9 @@ def main():
 
 			pygame.display.update()
 
-		if gameOver == 1:  # Victory
+			run = False
+
+		elif gameOver == 1:  # Victory
 			win.fill(BLACK)
 
 			end_font = pygame.font.Font('FFFFORWA.TTF', 32)
@@ -261,7 +263,10 @@ def main():
 			win.blit(score_label, (width // 2 - score_label.get_width() // 2, 500))
 
 			pygame.display.update()
-		else:  # Default
+
+			run = False
+
+		else:  # Default case
 			draw(win)
 
 		for event in pygame.event.get():
@@ -287,3 +292,4 @@ def main():
 
 
 main()
+pygame.time.delay(1000)
