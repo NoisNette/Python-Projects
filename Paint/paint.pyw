@@ -76,7 +76,7 @@ class Spot:
 			self.fill(new_color, old_color)
 
 class Button:
-	def __init__(self, x, y, w, h, caption, function):
+	def __init__(self, x, y, w, h, caption, function, togglable=False):
 		self.x = x
 		self.y = y
 		self.w = w
@@ -85,6 +85,7 @@ class Button:
 
 		self.caption = caption
 		self.function = function
+		self.togglable = togglable
 
 		self.color = WHITE
 		self.hovered = False
@@ -98,11 +99,11 @@ class Button:
 		pygame.draw.rect(win, BLACK, self.rect, 1)
 
 		# Draw caption
-		font = pygame.font.Font(None, self.h // 2)
+		font = pygame.font.Font(None, self.h // 2.5)
 		label = font.render(self.caption, 1, BLACK)
 
-		x = self.x + label.get_width() // 2 - 10
-		y = self.y + label.get_height() - 3
+		x = self.x + self.w // 2 - label.get_width() // 2
+		y = self.y + self.h // 2 - label.get_height() // 2
 		win.blit(label, (x, y))
 	
 	def click(self):
@@ -111,14 +112,22 @@ class Button:
 			self.function()
 	
 	def hover(self):
-		if self.rect.collidepoint(pygame.mouse.get_pos()):
-			self.hovered = True
-			self.color = GREY
-		elif self.clicked:
-			self.color = GREY
+		if self.togglable:
+			if self.rect.collidepoint(pygame.mouse.get_pos()):
+				self.hovered = True
+				self.color = GREY
+			elif self.clicked:
+				self.color = GREY
+			else:
+				self.hovered = False
+				self.color = WHITE
 		else:
-			self.hovered = False
-			self.color = WHITE
+			if self.rect.collidepoint(pygame.mouse.get_pos()):
+				self.hovered = True
+				self.color = GREY
+			else:
+				self.hovered = False
+				self.color = WHITE
 		
 		
 def pickColor():
@@ -133,6 +142,11 @@ def useFill():
 	global usingFill
 	usingFill = not usingFill
 
+def clearScreen():
+	for row in grid:
+		for spot in row:
+			spot.color = WHITE
+
 def draw(win):
 	win.fill(WHITE)
 
@@ -140,7 +154,8 @@ def draw(win):
 		for spot in row:
 			spot.draw(win)
 	
-	fillBtn.draw(win)
+	for button in buttons:
+		button.draw(win)
 
 	# Draw bounds
 	pygame.draw.line(win, BLACK, (0, 0), (width, 0), 2)
@@ -153,8 +168,11 @@ def draw(win):
 
 # Initialize grid
 grid = [[Spot(i, j) for j in range(COLS)] for i in range(ROWS)]
-fillBtn = Button(100, 600, 100, 100, 'FILL', useFill)
 
+# Initialize buttons
+buttons = []
+buttons.append(Button(5, 550, 100, 100, 'FILL', useFill, True)) # Fill button
+buttons.append(Button(110, 550, 100, 100, 'CLEAR', clearScreen)) # Clear screen button
 
 def main():
 	global dragged
@@ -178,7 +196,8 @@ def main():
 				else:
 					dragged = True
 				
-				fillBtn.click()
+				for button in buttons:
+					button.click()
 
 
 			elif event.type == pygame.MOUSEBUTTONUP:
