@@ -10,7 +10,7 @@ win = pygame.display.set_mode((width, height))
 pygame.display.set_caption('Paint')
 
 # Load image
-palette = pygame.transform.scale(pygame.image.load('palette1.jpg'), (300, 300))
+palette = pygame.transform.scale(pygame.image.load('palette1.jpg'), (400, 300))
 palette_rect = palette.get_rect()
 palette_rect.x = width - palette.get_width()
 palette_rect.y = 500
@@ -29,7 +29,11 @@ COLS = width // w
 # Variables
 dragged = False
 draw_color = BLACK
+picked_color = BLACK
+
 usingFill = False
+usingEraser = False
+showGrid = True
 
 class Spot:
 	def __init__(self, i, j):
@@ -46,7 +50,8 @@ class Spot:
 
 	def draw(self, win):
 		pygame.draw.rect(win, self.color, (self.x, self.y, self.w, self.w))
-		pygame.draw.rect(win, GREY, (self.x, self.y, self.w, self.w), 1)
+		if showGrid:
+			pygame.draw.rect(win, GREY, (self.x, self.y, self.w, self.w), 1)
 
 	def fill(self, new_color, old_color):
 		global grid
@@ -99,7 +104,7 @@ class Button:
 		pygame.draw.rect(win, BLACK, self.rect, 1)
 
 		# Draw caption
-		font = pygame.font.Font(None, self.h // 2.5)
+		font = pygame.font.Font(None, self.w // 3)
 		label = font.render(self.caption, 1, BLACK)
 
 		x = self.x + self.w // 2 - label.get_width() // 2
@@ -147,6 +152,18 @@ def clearScreen():
 		for spot in row:
 			spot.color = WHITE
 
+def useEraser():
+	global usingEraser
+	usingEraser = not usingEraser
+
+def toggleGrid():
+	global showGrid
+	showGrid = not showGrid
+
+def undo():
+	global grid, old_grid
+	grid =  old_grid[:]
+
 def draw(win):
 	win.fill(WHITE)
 
@@ -168,15 +185,20 @@ def draw(win):
 
 # Initialize grid
 grid = [[Spot(i, j) for j in range(COLS)] for i in range(ROWS)]
+old_grid = grid[:]
 
 # Initialize buttons
 buttons = []
-buttons.append(Button(5, 550, 100, 100, 'FILL', useFill, True)) # Fill button
-buttons.append(Button(110, 550, 100, 100, 'CLEAR', clearScreen)) # Clear screen button
+buttons.append(Button(5, 507, 100, 100, 'FILL', useFill, True))  # Fill button
+buttons.append(Button(110, 507, 100, 100, 'CLEAR', clearScreen))  # Clear screen button
+buttons.append(Button(215, 507, 100, 100, 'ERASE', useEraser, True))  # Erase button
+# TODO Implement undo and redo
+buttons.append(Button(5, 625, 100, 100, 'UNDO', undo))  # Undo button
+buttons.append(Button(110, 625, 100, 100, 'REDO', undo))  # Redo button
+buttons.append(Button(215, 625, 100, 100, 'GRID', toggleGrid))  # Toggle grid button
 
 def main():
-	global dragged
-	global draw_color
+	global dragged, draw_color, picked_color, old_grid
 
 	run = True
 	clock = pygame.time.Clock()
@@ -186,16 +208,33 @@ def main():
 
 		draw(win)
 
+		if usingEraser:
+			draw_color = WHITE
+		else:
+			draw_color = picked_color
+
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				quit()
 
 			if event.type == pygame.MOUSEBUTTONDOWN:
+				old_grid = grid[:]  # Save grid state
+				# Fill spot that is being hovered over
+				for row in grid:
+					for spot in row:
+						if spot.rect.collidepoint(pygame.mouse.get_pos()):
+							if usingFill:
+								spot.fill(draw_color, spot.color)
+							else:
+								spot.color = draw_color
+
+				# Call pickColor() if mouse is on color palette
 				if palette_rect.collidepoint(pygame.mouse.get_pos()):
-					draw_color = pickColor()
+					picked_color = pickColor()
 				else:
 					dragged = True
 				
+				# Click all the buttons, checking collision with mouse is inside the click() method
 				for button in buttons:
 					button.click()
 
@@ -211,5 +250,6 @@ def main():
 								spot.fill(draw_color, spot.color)
 							else:
 								spot.color = draw_color
+		
 		
 main()
