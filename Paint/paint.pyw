@@ -1,12 +1,13 @@
 import pygame
 import os
-from tkinter import *
+import tkinter
 from tkinter import messagebox
 from tkinter import filedialog
 
 os.system('cls')
 pygame.init()
 pygame.font.init()
+tkinter.Tk().wm_withdraw()
 
 width, height = 800, 800
 win = pygame.display.set_mode((width, height))
@@ -21,7 +22,8 @@ palette_rect.y = 500
 # Constants
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-GREY = (128, 128, 128)
+LIGHT_GREY = (175, 175, 175)
+GREY = (156, 156, 156)
 FPS = 120
 
 w = 25
@@ -104,7 +106,7 @@ class Button:
 
 		# Draw button
 		pygame.draw.rect(win, self.color, self.rect)
-		pygame.draw.rect(win, BLACK, self.rect, 1)
+		pygame.draw.rect(win, BLACK, self.rect, 4)
 
 		# Draw caption
 		font = pygame.font.Font(None, self.w // 3)
@@ -123,7 +125,7 @@ class Button:
 		if self.togglable:
 			if self.rect.collidepoint(pygame.mouse.get_pos()):
 				self.hovered = True
-				self.color = GREY
+				self.color = LIGHT_GREY
 			elif self.clicked:
 				self.color = GREY
 			else:
@@ -132,7 +134,7 @@ class Button:
 		else:
 			if self.rect.collidepoint(pygame.mouse.get_pos()):
 				self.hovered = True
-				self.color = GREY
+				self.color = LIGHT_GREY
 			else:
 				self.hovered = False
 				self.color = WHITE
@@ -164,7 +166,6 @@ def toggleGrid():
 	showGrid = not showGrid
 
 def saveFile():
-	Tk().wm_withdraw()
 	filename = filedialog.asksaveasfilename(initialdir='./', title='Saving drawing', defaultextension='.txt', filetypes=[("Text files", "*.txt")])
 
 	if filename:
@@ -181,7 +182,6 @@ def saveFile():
 		return
 
 def openFile():
-	Tk().wm_withdraw()
 	filename = filedialog.askopenfilename(initialdir='./', title='Opening drawing', defaultextension='.txt', filetypes=[("Text files", "*.txt")])
 
 	if filename:
@@ -194,6 +194,9 @@ def openFile():
 			for i in range(len(grid)):
 				for j in range(len(grid[i])):
 					grid[i][j].color = compressed_grid[i][j]
+			
+			name = filename.split('/')[-1]
+			pygame.display.set_caption(name.split('.')[0])
 		except:
 			messagebox.showinfo('Error!', 'Invalid file...')
 	else:
@@ -227,7 +230,7 @@ buttons = []
 buttons.append(Button(5, 507, 100, 100, 'FILL', useFill, True))  # Fill button
 buttons.append(Button(110, 507, 100, 100, 'CLEAR', clearScreen))  # Clear screen button
 buttons.append(Button(215, 507, 100, 100, 'ERASE', useEraser, True))  # Erase button
-# TODO Implement undo and redo
+
 buttons.append(Button(5, 625, 100, 100, 'SAVE', saveFile))  # Save button
 buttons.append(Button(110, 625, 100, 100, 'OPEN', openFile))  # Open button
 buttons.append(Button(215, 625, 100, 100, 'GRID', toggleGrid))  # Toggle grid button
@@ -250,7 +253,11 @@ def main():
 
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
-				quit()
+				msg = messagebox.askyesnocancel('Closing...', 'Would you like to save before closing?')
+				if msg:
+					saveFile()
+				elif msg == False and msg is not None:
+					quit()
 
 			if event.type == pygame.MOUSEBUTTONDOWN:
 				# Fill spot that is being hovered over
