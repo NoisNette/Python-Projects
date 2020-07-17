@@ -21,15 +21,15 @@ BLACK = (0, 0, 0)
 GREY = (128, 128, 128)
 FPS = 120
 
-w = 100
-h = 100
+w = 25
+h = 25
 ROWS = (height - palette.get_height()) // h
 COLS = width // w
 
 # Variables
 dragged = False
 draw_color = BLACK
-usingFill = True
+usingFill = False
 
 class Spot:
 	def __init__(self, i, j):
@@ -51,14 +51,21 @@ class Spot:
 	def fill(self, new_color, old_color):
 		global grid
 
+		i = self.i
+		j = self.j
 		try:
-			for xoff in range(-1, 2):
-				for yoff in range(-1, 2):
-					i = self.i + xoff
-					j = self.j + yoff
-					if (i > -1 and i < ROWS) and (j > -1 and j < COLS):
-						if grid[i][j].color == old_color or grid[i][j].color != new_color:
-							grid[i][j].setColor(new_color, old_color)
+			if i > -1:
+				if grid[i-1][j].color == old_color and grid[i-1][j].color != new_color:
+					grid[i-1][j].setColor(new_color, old_color)
+			if i < ROWS:
+				if grid[i+1][j].color == old_color and grid[i+1][j].color != new_color:
+					grid[i + 1][j].setColor(new_color, old_color)
+			if j > -1:
+				if grid[i][j-1].color == old_color and grid[i][j-1].color != new_color:
+					grid[i][j-1].setColor(new_color, old_color)
+			if j < COLS:
+				if grid[i][j+1].color == old_color and grid[i][j+1].color != new_color:
+					grid[i][j+1].setColor(new_color, old_color)
 		except:
 			return
 
@@ -84,16 +91,34 @@ class Button:
 		self.clicked = False
 
 	def draw(self, win):
-		if self.rect.collidepoint(pygame.mouse.get_pos()):
-			self.hovered = True
+		self.hover()
 
-		if self.hovered or self.clicked:
-			self.color = GREY
-		else:
-			self.color = WHITE
-
+		# Draw button
 		pygame.draw.rect(win, self.color, self.rect)
 		pygame.draw.rect(win, BLACK, self.rect, 1)
+
+		# Draw caption
+		font = pygame.font.Font(None, self.h // 2)
+		label = font.render(self.caption, 1, BLACK)
+
+		x = self.x + label.get_width() // 2 - 10
+		y = self.y + label.get_height() - 3
+		win.blit(label, (x, y))
+	
+	def click(self):
+		if self.rect.collidepoint(pygame.mouse.get_pos()):
+			self.clicked = not self.clicked
+			self.function()
+	
+	def hover(self):
+		if self.rect.collidepoint(pygame.mouse.get_pos()):
+			self.hovered = True
+			self.color = GREY
+		elif self.clicked:
+			self.color = GREY
+		else:
+			self.hovered = False
+			self.color = WHITE
 		
 		
 def pickColor():
@@ -104,12 +129,18 @@ def pickColor():
 
 	return pixel[1:]
 
+def useFill():
+	global usingFill
+	usingFill = not usingFill
+
 def draw(win):
 	win.fill(WHITE)
 
 	for row in grid:
 		for spot in row:
 			spot.draw(win)
+	
+	fillBtn.draw(win)
 
 	# Draw bounds
 	pygame.draw.line(win, BLACK, (0, 0), (width, 0), 2)
@@ -122,12 +153,12 @@ def draw(win):
 
 # Initialize grid
 grid = [[Spot(i, j) for j in range(COLS)] for i in range(ROWS)]
+fillBtn = Button(100, 600, 100, 100, 'FILL', useFill)
 
 
 def main():
 	global dragged
 	global draw_color
-	global usingFill
 
 	run = True
 	clock = pygame.time.Clock()
@@ -144,16 +175,11 @@ def main():
 			if event.type == pygame.MOUSEBUTTONDOWN:
 				if palette_rect.collidepoint(pygame.mouse.get_pos()):
 					draw_color = pickColor()
-
 				else:
 					dragged = True
+				
+				fillBtn.click()
 
-				if event.button == 3:
-					usingFill = True
-					print('fill')
-				elif event.button == 2:
-					usingFill = False
-					print('stop fill')
 
 			elif event.type == pygame.MOUSEBUTTONUP:
 				dragged = False
@@ -162,7 +188,9 @@ def main():
 				for row in grid:
 					for spot in row:
 						if spot.rect.collidepoint(pygame.mouse.get_pos()):
-							#spot.fill(draw_color, spot.color)
-							spot.color = draw_color
+							if usingFill:
+								spot.fill(draw_color, spot.color)
+							else:
+								spot.color = draw_color
 		
 main()
