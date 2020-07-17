@@ -1,5 +1,8 @@
 import pygame
 import os
+from tkinter import *
+from tkinter import messagebox
+from tkinter import filedialog
 
 os.system('cls')
 pygame.init()
@@ -10,7 +13,7 @@ win = pygame.display.set_mode((width, height))
 pygame.display.set_caption('Paint')
 
 # Load image
-palette = pygame.transform.scale(pygame.image.load('palette1.jpg'), (400, 300))
+palette = pygame.transform.scale(pygame.image.load('palette.jpg'), (400, 300))
 palette_rect = palette.get_rect()
 palette_rect.x = width - palette.get_width()
 palette_rect.y = 500
@@ -160,9 +163,41 @@ def toggleGrid():
 	global showGrid
 	showGrid = not showGrid
 
-def undo():
-	global grid, old_grid
-	grid =  old_grid[:]
+def saveFile():
+	Tk().wm_withdraw()
+	filename = filedialog.asksaveasfilename(initialdir='./', title='Saving drawing', defaultextension='.txt', filetypes=[("Text files", "*.txt")])
+
+	if filename:
+		compressed_grid = []
+		for i in range(len(grid)):
+			row = []
+			for j in range(len(grid[i])):
+				row.append(grid[i][j].color)
+			compressed_grid.append(row)
+		
+		with open(filename, 'w+') as f:
+			f.write(str(compressed_grid))
+	else:
+		return
+
+def openFile():
+	Tk().wm_withdraw()
+	filename = filedialog.askopenfilename(initialdir='./', title='Opening drawing', defaultextension='.txt', filetypes=[("Text files", "*.txt")])
+
+	if filename:
+		global grid
+		try:
+			with open(filename, 'r') as f:
+				lines = f.readlines()
+				compressed_grid = eval(lines[0].strip())
+
+			for i in range(len(grid)):
+				for j in range(len(grid[i])):
+					grid[i][j].color = compressed_grid[i][j]
+		except:
+			messagebox.showinfo('Error!', 'Invalid file...')
+	else:
+		return
 
 def draw(win):
 	win.fill(WHITE)
@@ -193,12 +228,12 @@ buttons.append(Button(5, 507, 100, 100, 'FILL', useFill, True))  # Fill button
 buttons.append(Button(110, 507, 100, 100, 'CLEAR', clearScreen))  # Clear screen button
 buttons.append(Button(215, 507, 100, 100, 'ERASE', useEraser, True))  # Erase button
 # TODO Implement undo and redo
-buttons.append(Button(5, 625, 100, 100, 'UNDO', undo))  # Undo button
-buttons.append(Button(110, 625, 100, 100, 'REDO', undo))  # Redo button
+buttons.append(Button(5, 625, 100, 100, 'SAVE', saveFile))  # Save button
+buttons.append(Button(110, 625, 100, 100, 'OPEN', openFile))  # Open button
 buttons.append(Button(215, 625, 100, 100, 'GRID', toggleGrid))  # Toggle grid button
 
 def main():
-	global dragged, draw_color, picked_color, old_grid
+	global dragged, draw_color, picked_color
 
 	run = True
 	clock = pygame.time.Clock()
@@ -218,7 +253,6 @@ def main():
 				quit()
 
 			if event.type == pygame.MOUSEBUTTONDOWN:
-				old_grid = grid[:]  # Save grid state
 				# Fill spot that is being hovered over
 				for row in grid:
 					for spot in row:
@@ -251,5 +285,5 @@ def main():
 							else:
 								spot.color = draw_color
 		
-		
+
 main()
