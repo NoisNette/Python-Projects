@@ -217,6 +217,23 @@ def pickColor():
 
 	return pixel[1:]  # Don't return alpha value
 
+def isEmpty(grid):
+	"""
+	Checks if the current grid is blank
+
+	Args:
+		grid (list<list<Spot>>): Main 2d list of Spot objects
+
+	Returns:
+		bool: Whether the grid is blank
+	"""
+	empty_grid = [[Spot(i, j) for j in range(COLS)] for i in range(ROWS)]
+	for i in range(len(grid)):
+		for j in range(len(grid[i])):
+			if grid[i][j].color != empty_grid[i][j].color:
+				return False
+	return True
+
 def useFill():
 	"""
 	Function executed when Fill Button is pressed
@@ -246,13 +263,19 @@ def toggleGrid():
 	global showGrid
 	showGrid = not showGrid
 
+def undo():
+	pass
+
+def redo():
+	pass
+
 def saveFile():
 	"""
 	When Save Button is pressed, prompt user for location and name of file and create a .txt file with information about the grid
 	"""
 	filename = filedialog.asksaveasfilename(initialdir='./', title='Saving drawing', defaultextension='.txt', filetypes=[("Text files", "*.txt")])
 
-	if filename:  # filename == ' ' if user pressed 'Cancel' in Save window
+	if filename:  # filename == '' if user pressed 'Cancel' in Save window
 		compressed_grid = []
 		for i in range(len(grid)):
 			row = []
@@ -271,7 +294,7 @@ def openFile():
 	"""
 	filename = filedialog.askopenfilename(initialdir='./', title='Opening drawing', defaultextension='.txt', filetypes=[("Text files", "*.txt")])
 
-	if filename:  # filename == ' ' if user pressed 'Cancel' in Open window
+	if filename:  # filename == '' if user pressed 'Cancel' in Open window
 		global grid
 		try:  # Make sure the file is a usable file in the correct format, else popup Error dialog
 			with open(filename, 'r') as f:
@@ -321,19 +344,23 @@ grid = [[Spot(i, j) for j in range(COLS)] for i in range(ROWS)]
 # Initialize buttons
 buttons = []
 
-buttons.append(Button(5, 507, 100, 100, 'FILL', useFill, True))  # Fill button
-buttons.append(Button(110, 507, 100, 100, 'CLEAR', clearScreen))  # Clear Screen button
-buttons.append(Button(215, 507, 100, 100, 'ERASE', useEraser, True))  # Erase button
+buttons.append(Button(5, 507, 75, 75, 'FILL', useFill, True))  # Fill button
+buttons.append(Button(110, 507, 75, 75, 'CLEAR', clearScreen))  # Clear Screen button
+buttons.append(Button(215, 507, 75, 75, 'ERASE', useEraser, True))  # Erase button
 
-buttons.append(Button(5, 625, 100, 100, 'SAVE', saveFile))  # Save button
-buttons.append(Button(110, 625, 100, 100, 'OPEN', openFile))  # Open button
-buttons.append(Button(215, 625, 100, 100, 'GRID', toggleGrid))  # Toggle grid button
+buttons.append(Button(5, 600, 75, 75, 'SAVE', saveFile))  # Save button
+buttons.append(Button(110, 600, 75, 75, 'OPEN', openFile))  # Open button
+buttons.append(Button(215, 600, 75, 75, 'GRID', toggleGrid))  # Toggle grid button
+
+buttons.append(Button(5, 700, 75, 75, 'UNDO', undo))  # Undo button
+buttons.append(Button(110, 700, 75, 75, 'REDO', redo))  # Redo button
+
 
 def main():
 	"""
 	Main function for executing everything
 	"""
-	global dragged, draw_color, picked_color
+	global dragged, draw_color, picked_color, grid, all_grids, cur_grid
 
 	run = True
 	clock = pygame.time.Clock()
@@ -353,12 +380,15 @@ def main():
 
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
-				msg = messagebox.askyesnocancel('Closing...', 'Would you like to save before closing?')
-				if msg:  # Save file if 'Yes' is pressed
-					saveFile()
-				elif msg == False and msg is not None:  # Quit if 'No' is pressed
+				if not isEmpty(grid):
+					msg = messagebox.askyesnocancel('Closing...', 'Would you like to save before closing?')
+					if msg:  # Save file if 'Yes' is pressed
+						saveFile()
+					elif msg == False and msg is not None:  # Quit if 'No' is pressed
+						quit()
+					# Continue running if 'Cancel' is pressed
+				else:
 					quit()
-				# Continue running if 'Cancel' is pressed
 
 			if event.type == pygame.MOUSEBUTTONDOWN:
 				# Fill spot that is being hovered over
