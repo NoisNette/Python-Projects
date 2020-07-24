@@ -40,10 +40,12 @@ usingFill = False
 usingEraser = False
 showGrid = True
 
+
 class Spot:
 	"""
 	Class for handling actions of a single spot
 	"""
+
 	def __init__(self, i, j):
 		"""
 		Constructor for Spot class
@@ -91,20 +93,19 @@ class Spot:
 		j = self.j
 		try:  # Make sure that every neighbor is possible
 			if i > -1:
-				if grid[i-1][j].color == old_color and grid[i-1][j].color != new_color:
-					grid[i-1][j].setColor(new_color, old_color)
+				if grid[i - 1][j].color == old_color and grid[i - 1][j].color != new_color:
+					grid[i - 1][j].setColor(new_color, old_color)
 			if i < ROWS:
-				if grid[i+1][j].color == old_color and grid[i+1][j].color != new_color:
+				if grid[i + 1][j].color == old_color and grid[i + 1][j].color != new_color:
 					grid[i + 1][j].setColor(new_color, old_color)
 			if j > -1:
-				if grid[i][j-1].color == old_color and grid[i][j-1].color != new_color:
-					grid[i][j-1].setColor(new_color, old_color)
+				if grid[i][j - 1].color == old_color and grid[i][j - 1].color != new_color:
+					grid[i][j - 1].setColor(new_color, old_color)
 			if j < COLS:
-				if grid[i][j+1].color == old_color and grid[i][j+1].color != new_color:
-					grid[i][j+1].setColor(new_color, old_color)
+				if grid[i][j + 1].color == old_color and grid[i][j + 1].color != new_color:
+					grid[i][j + 1].setColor(new_color, old_color)
 		except:
 			return
-
 
 	def setColor(self, new_color, old_color):
 		"""
@@ -118,10 +119,12 @@ class Spot:
 		if usingFill:  # Only initiate flood-fill if user wants to fill
 			self.fill(new_color, old_color)
 
+
 class Button:
 	"""
 	Class for function buttons
 	"""
+
 	def __init__(self, x, y, w, h, caption, function, togglable=False):
 		"""
 		Constructor for Button class
@@ -172,7 +175,7 @@ class Button:
 		x = self.x + self.w // 2 - label.get_width() // 2
 		y = self.y + self.h // 2 - label.get_height() // 2
 		win.blit(label, (x, y))
-	
+
 	def click(self):
 		"""
 		Check if button is clicked and execute function if it is
@@ -180,13 +183,14 @@ class Button:
 		if self.rect.collidepoint(pygame.mouse.get_pos()):
 			self.clicked = not self.clicked
 			self.function()
-	
+
 	def hover(self):
 		"""
 		Check if button is being hovered over with the mouse and update color accordingly
 		"""
 		if self.togglable:  # Allow button to stay in GREY color if it is togglable
-			if self.rect.collidepoint(pygame.mouse.get_pos()):  # Always set color to LIGHT_GREY if the button is hovered
+			# Always set color to LIGHT_GREY if the button is hovered
+			if self.rect.collidepoint(pygame.mouse.get_pos()):
 				self.hovered = True
 				self.color = LIGHT_GREY
 			elif self.clicked:
@@ -201,8 +205,8 @@ class Button:
 			else:  # Return color to default if button is not hovered or clicked
 				self.hovered = False
 				self.color = WHITE
-		
-		
+
+
 def pickColor():
 	"""
 	Looks at the color of the pixel that is being clicked on
@@ -213,9 +217,11 @@ def pickColor():
 	screen = pygame.display.get_surface()  # Load window surface
 	mouse = pygame.mouse.get_pos()
 	pxarray = pygame.PixelArray(screen)  # Load pixels
-	pixel = pygame.Color(pxarray[mouse[0], mouse[1]])  # Get color of pixel at (mouseX, mouseY)
+	# Get color of pixel at (mouseX, mouseY)
+	pixel = pygame.Color(pxarray[mouse[0], mouse[1]])
 
 	return pixel[1:]  # Don't return alpha value
+
 
 def isEmpty(grid):
 	"""
@@ -234,12 +240,14 @@ def isEmpty(grid):
 				return False
 	return True
 
+
 def useFill():
 	"""
 	Function executed when Fill Button is pressed
 	"""
 	global usingFill
 	usingFill = not usingFill
+
 
 def clearScreen():
 	"""
@@ -249,12 +257,14 @@ def clearScreen():
 		for spot in row:
 			spot.color = WHITE
 
+
 def useEraser():
 	"""
 	Function executed when Erase Button is pressed
 	"""
 	global usingEraser
 	usingEraser = not usingEraser
+
 
 def toggleGrid():
 	"""
@@ -263,17 +273,13 @@ def toggleGrid():
 	global showGrid
 	showGrid = not showGrid
 
-def undo():
-	pass
-
-def redo():
-	pass
 
 def saveFile():
 	"""
 	When Save Button is pressed, prompt user for location and name of file and create a .txt file with information about the grid
 	"""
-	filename = filedialog.asksaveasfilename(initialdir='./', title='Saving drawing', defaultextension='.txt', filetypes=[("Text files", "*.txt")])
+	filename = filedialog.asksaveasfilename(
+		initialdir='./', title='Saving drawing', defaultextension='.txt', filetypes=[("Text files", "*.txt")])
 
 	if filename:  # filename == '' if user pressed 'Cancel' in Save window
 		compressed_grid = []
@@ -282,35 +288,42 @@ def saveFile():
 			for j in range(len(grid[i])):
 				row.append(grid[i][j].color)
 			compressed_grid.append(row)  # Get 2d list of colors of every spot
-		
+
 		with open(filename, 'w+') as f:  # Write to new file or overwrite existing file
-			f.write(str(compressed_grid))  # All information about colors is in a single line
+			# All information about colors is in a single line
+			f.write(str(compressed_grid))
 	else:
 		return
+
 
 def openFile():
 	"""
 	When Open Button is pressed, prompt user for location and name of file and read color information about grid, then apply to existing grid
 	"""
-	filename = filedialog.askopenfilename(initialdir='./', title='Opening drawing', defaultextension='.txt', filetypes=[("Text files", "*.txt")])
+	filename = filedialog.askopenfilename(
+		initialdir='./', title='Opening drawing', defaultextension='.txt', filetypes=[("Text files", "*.txt")])
 
 	if filename:  # filename == '' if user pressed 'Cancel' in Open window
 		global grid
 		try:  # Make sure the file is a usable file in the correct format, else popup Error dialog
 			with open(filename, 'r') as f:
 				lines = f.readlines()
-				compressed_grid = eval(lines[0].strip())  # Only look at first line since all the data is in the first line
+				# Only look at first line since all the data is in the first line
+				compressed_grid = eval(lines[0].strip())
 
 			for i in range(len(grid)):
 				for j in range(len(grid[i])):
-					grid[i][j].color = compressed_grid[i][j]  # Update current grid to saved grid
-			
+					# Update current grid to saved grid
+					grid[i][j].color = compressed_grid[i][j]
+
 			name = filename.split('/')[-1]
-			pygame.display.set_caption(name.split('.')[0])  # Set the name of the window to the name of the opened file
+			# Set the name of the window to the name of the opened file
+			pygame.display.set_caption(name.split('.')[0])
 		except:
 			messagebox.showinfo('Error!', 'Invalid file...')
 	else:
 		return
+
 
 def draw(win):
 	"""
@@ -321,16 +334,19 @@ def draw(win):
 	"""
 	win.fill(WHITE)
 
+	# Draw all spots
 	for row in grid:
 		for spot in row:
-			spot.draw(win)  # Draw all spots
-	
-	for button in buttons:  # Draw all buttons
+			spot.draw(win)
+
+	# Draw all buttons
+	for button in buttons:
 		button.draw(win)
 
 	# Draw bounds
 	pygame.draw.line(win, BLACK, (0, 0), (width, 0), 2)
-	pygame.draw.line(win, BLACK, (0, (height - palette.get_height())), (width, (height - palette.get_height())), 2)
+	pygame.draw.line(win, BLACK, (0, (height - palette.get_height())),
+	                 (width, (height - palette.get_height())), 2)
 
 	# Draw color pallete
 	win.blit(palette, palette_rect)
@@ -343,24 +359,23 @@ grid = [[Spot(i, j) for j in range(COLS)] for i in range(ROWS)]
 
 # Initialize buttons
 buttons = []
-
 buttons.append(Button(5, 507, 75, 75, 'FILL', useFill, True))  # Fill button
-buttons.append(Button(110, 507, 75, 75, 'CLEAR', clearScreen))  # Clear Screen button
-buttons.append(Button(215, 507, 75, 75, 'ERASE', useEraser, True))  # Erase button
+# Clear Screen button
+buttons.append(Button(110, 507, 75, 75, 'CLEAR', clearScreen))
+buttons.append(Button(215, 507, 75, 75, 'ERASE',
+                      useEraser, True))  # Erase button
 
 buttons.append(Button(5, 600, 75, 75, 'SAVE', saveFile))  # Save button
 buttons.append(Button(110, 600, 75, 75, 'OPEN', openFile))  # Open button
-buttons.append(Button(215, 600, 75, 75, 'GRID', toggleGrid))  # Toggle grid button
-
-buttons.append(Button(5, 700, 75, 75, 'UNDO', undo))  # Undo button
-buttons.append(Button(110, 700, 75, 75, 'REDO', redo))  # Redo button
+# Toggle grid button
+buttons.append(Button(215, 600, 75, 75, 'GRID', toggleGrid))
 
 
 def main():
 	"""
 	Main function for executing everything
 	"""
-	global dragged, draw_color, picked_color, grid, all_grids, cur_grid
+	global dragged, draw_color, picked_color
 
 	run = True
 	clock = pygame.time.Clock()
@@ -381,7 +396,8 @@ def main():
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				if not isEmpty(grid):
-					msg = messagebox.askyesnocancel('Closing...', 'Would you like to save before closing?')
+					msg = messagebox.askyesnocancel(
+						'Closing...', 'Would you like to save before closing?')
 					if msg:  # Save file if 'Yes' is pressed
 						saveFile()
 					elif msg == False and msg is not None:  # Quit if 'No' is pressed
@@ -405,15 +421,14 @@ def main():
 					picked_color = pickColor()
 				else:
 					dragged = True
-				
+
 				# Click all the buttons, checking collision with mouse is inside the click() method
 				for button in buttons:
 					button.click()
 
-
 			elif event.type == pygame.MOUSEBUTTONUP:
 				dragged = False
-			
+
 			if event.type == pygame.MOUSEMOTION and dragged:  # Fill while dragging mouse
 				for row in grid:
 					for spot in row:
@@ -422,6 +437,7 @@ def main():
 								spot.fill(draw_color, spot.color)
 							else:
 								spot.color = draw_color
-		
+
+
 # Call main function
 main()
