@@ -45,7 +45,7 @@ class Spot:
 	Class for handling actions of a single spot
 	"""
 
-	def __init__(self, i: int, j: int) -> None:
+	def __init__(self, i, j):
 		"""
 		Constructor for Spot class
 
@@ -65,7 +65,7 @@ class Spot:
 
 		self.color = WHITE
 
-	def draw(self, win: pygame.Surface) -> None:
+	def draw(self, win):
 		"""
 		Draw self to the display
 
@@ -77,7 +77,7 @@ class Spot:
 		if showGrid:  # Only draw grid if user chooses to
 			pygame.draw.rect(win, GREY, (self.x, self.y, self.w, self.w), 1)
 
-	def fill(self, new_color: tuple, old_color: tuple) -> None:
+	def fill(self, new_color, old_color):
 		"""
 		Function for flood-filling with a selected color
 
@@ -90,22 +90,22 @@ class Spot:
 		i = self.i
 		j = self.j
 		try:  # Make sure that every neighbor is possible
-			if i > -1:
+			if i > 0:
 				if grid[i - 1][j].color == old_color and grid[i - 1][j].color != new_color:
 					grid[i - 1][j].setColor(new_color, old_color)
-			if i < ROWS:
+			if i < ROWS - 1:
 				if grid[i + 1][j].color == old_color and grid[i + 1][j].color != new_color:
 					grid[i + 1][j].setColor(new_color, old_color)
-			if j > -1:
+			if j > 0:
 				if grid[i][j - 1].color == old_color and grid[i][j - 1].color != new_color:
 					grid[i][j - 1].setColor(new_color, old_color)
-			if j < COLS:
+			if j < COLS - 1:
 				if grid[i][j + 1].color == old_color and grid[i][j + 1].color != new_color:
 					grid[i][j + 1].setColor(new_color, old_color)
 		except:
 			return
 
-	def setColor(self, new_color: tuple, old_color: tuple) -> None:
+	def setColor(self, new_color, old_color):
 		"""
 		Setter for setting own color and flood-filling to neighboring spots
 
@@ -123,7 +123,7 @@ class Button:
 	Class for function buttons
 	"""
 
-	def __init__(self, x: int, y: int, w: int, h: int, caption: str, function, togglable=False) -> None:
+	def __init__(self, x, y, w, h, caption, function, togglable=False):
 		"""
 		Constructor for Button class
 
@@ -151,7 +151,7 @@ class Button:
 		self.hovered = False
 		self.clicked = False
 
-	def draw(self, win: pygame.Surface) -> None:
+	def draw(self, win):
 		"""
 		Draw self to the display
 
@@ -174,7 +174,7 @@ class Button:
 		y = self.y + self.h // 2 - label.get_height() // 2
 		win.blit(label, (x, y))
 
-	def click(self) -> None:
+	def click(self):
 		"""
 		Check if button is clicked and execute function if it is
 		"""
@@ -182,7 +182,7 @@ class Button:
 			self.clicked = not self.clicked
 			self.function()
 
-	def hover(self) -> None:
+	def hover(self):
 		"""
 		Check if button is being hovered over with the mouse and update color accordingly
 		"""
@@ -206,7 +206,7 @@ class Button:
 
 
 class Slider:
-	def __init__(self, x: int, y: int, length: int, values: list) -> None:
+	def __init__(self, x, y, length, values):
 		"""
 		Constructor for Slider class
 
@@ -236,7 +236,7 @@ class Slider:
 		# Default value of slider
 		self.value = min(values)
 
-	def draw(self, win: pygame.Surface) -> None:
+	def draw(self, win):
 		"""
 		Draws slider to screen
 
@@ -271,7 +271,7 @@ class Slider:
 		if not dragged:
 			self.rectY = nearestTickY - self.rectH // 2
 
-	def getValuesY(self) -> None:
+	def getValuesY(self):
 		"""
 		Calculates the y heights of all ticks
 		"""
@@ -279,7 +279,7 @@ class Slider:
 		for i in range(self.numTicks):
 			self.valuesY.append(self.y + gap * i)
 
-	def move(self) -> None:
+	def move(self):
 		"""
 		Moves the slider rect when the mouse drags it
 		"""
@@ -287,7 +287,7 @@ class Slider:
 		self.rectY = mouseY + yOff
 
 
-def pickColor() -> None:
+def pickColor():
 	"""
 	Prompts the user to pick a color and then selects that color
 	"""
@@ -297,7 +297,7 @@ def pickColor() -> None:
 	picked_color = color
 
 
-def isEmpty(grid: list) -> bool:
+def isEmpty(grid):
 	"""
 	Checks if the current grid is blank
 
@@ -315,7 +315,7 @@ def isEmpty(grid: list) -> bool:
 	return True
 
 
-def useFill() -> None:
+def useFill():
 	"""
 	Function executed when Fill Button is pressed
 	"""
@@ -323,7 +323,7 @@ def useFill() -> None:
 	usingFill = not usingFill
 
 
-def clearScreen() -> None:
+def clearScreen():
 	"""
 	Function executed when Clear Screen Button is pressed, resets every spot's color to WHITE
 	"""
@@ -332,7 +332,7 @@ def clearScreen() -> None:
 			spot.color = WHITE
 
 
-def useEraser() -> None:
+def useEraser():
 	"""
 	Function executed when Erase Button is pressed
 	"""
@@ -340,7 +340,7 @@ def useEraser() -> None:
 	usingEraser = not usingEraser
 
 
-def toggleGrid() -> None:
+def toggleGrid():
 	"""
 	Function executed when Grid Button is pressed
 	"""
@@ -348,7 +348,7 @@ def toggleGrid() -> None:
 	showGrid = not showGrid
 
 
-def saveFile() -> None:
+def saveFile():
 	"""
 	When Save Button is pressed, prompt user for location and name of file and create a .txt file with information about the grid
 	"""
@@ -370,7 +370,7 @@ def saveFile() -> None:
 		return
 
 
-def openFile() -> None:
+def openFile():
 	"""
 	When Open Button is pressed, prompt user for location and name of file and read color information about grid, then apply to existing grid
 	"""
@@ -399,7 +399,7 @@ def openFile() -> None:
 		return
 
 
-def draw(win: pygame.Surface) -> None:
+def draw(win):
 	"""
 	Function for drawing everything to the screen
 
@@ -423,7 +423,6 @@ def draw(win: pygame.Surface) -> None:
 	pygame.draw.line(win, BLACK, (0, 0), (width, 0), 2)
 	pygame.draw.line(win, BLACK, (0, (height - FUNCTION_AREA)),
 	                 (width, (height - FUNCTION_AREA)), 2)
-
 
 	pygame.display.update()
 
@@ -450,7 +449,7 @@ buttons.append(Button(400, 700, 75, 75, 'COLOR', pickColor))
 slider = Slider(350, 615, 200, [1, 2, 3, 4, 5])
 
 
-def main() -> None:
+def main():
 	"""
 	Main function for executing everything
 	"""
