@@ -3,6 +3,7 @@ import os
 import tkinter
 from tkinter import messagebox
 from tkinter import filedialog
+from tkinter import colorchooser
 
 os.system('cls')
 pygame.init()
@@ -13,11 +14,6 @@ width, height = 800, 800
 win = pygame.display.set_mode((width, height))
 pygame.display.set_caption('Paint')
 
-# Load image
-palette = pygame.transform.scale(pygame.image.load('palette.jpg'), (400, 300))
-palette_rect = palette.get_rect()
-palette_rect.x = width - palette.get_width()
-palette_rect.y = 500
 
 # Constants
 WHITE = (255, 255, 255)
@@ -27,7 +23,8 @@ GREY = (156, 156, 156)
 
 w = 25
 h = 25
-ROWS = (height - palette.get_height()) // h
+FUNCTION_AREA = 200
+ROWS = (height - FUNCTION_AREA) // h
 COLS = width // w
 
 # Variables
@@ -42,12 +39,13 @@ showGrid = True
 dragged = False
 yOff = 0
 
+
 class Spot:
 	"""
 	Class for handling actions of a single spot
 	"""
 
-	def __init__(self, i, j):
+	def __init__(self, i: int, j: int) -> None:
 		"""
 		Constructor for Spot class
 
@@ -67,7 +65,7 @@ class Spot:
 
 		self.color = WHITE
 
-	def draw(self, win):
+	def draw(self, win: pygame.Surface) -> None:
 		"""
 		Draw self to the display
 
@@ -79,7 +77,7 @@ class Spot:
 		if showGrid:  # Only draw grid if user chooses to
 			pygame.draw.rect(win, GREY, (self.x, self.y, self.w, self.w), 1)
 
-	def fill(self, new_color, old_color):
+	def fill(self, new_color: tuple, old_color: tuple) -> None:
 		"""
 		Function for flood-filling with a selected color
 
@@ -87,7 +85,6 @@ class Spot:
 			new_color (pygame.Color): Tuple of (int, int, int) values representing a RGB color, stores the new color that the spot needs to get
 			old_color (pygame.Color): Tuple of (int, int, int) values representing a RGB color
 		"""
-		global grid
 
 		# Use shorter name of variable for readability
 		i = self.i
@@ -108,7 +105,7 @@ class Spot:
 		except:
 			return
 
-	def setColor(self, new_color, old_color):
+	def setColor(self, new_color: tuple, old_color: tuple) -> None:
 		"""
 		Setter for setting own color and flood-filling to neighboring spots
 
@@ -126,7 +123,7 @@ class Button:
 	Class for function buttons
 	"""
 
-	def __init__(self, x, y, w, h, caption, function, togglable=False):
+	def __init__(self, x: int, y: int, w: int, h: int, caption: str, function, togglable=False) -> None:
 		"""
 		Constructor for Button class
 
@@ -154,7 +151,7 @@ class Button:
 		self.hovered = False
 		self.clicked = False
 
-	def draw(self, win):
+	def draw(self, win: pygame.Surface) -> None:
 		"""
 		Draw self to the display
 
@@ -177,7 +174,7 @@ class Button:
 		y = self.y + self.h // 2 - label.get_height() // 2
 		win.blit(label, (x, y))
 
-	def click(self):
+	def click(self) -> None:
 		"""
 		Check if button is clicked and execute function if it is
 		"""
@@ -185,7 +182,7 @@ class Button:
 			self.clicked = not self.clicked
 			self.function()
 
-	def hover(self):
+	def hover(self) -> None:
 		"""
 		Check if button is being hovered over with the mouse and update color accordingly
 		"""
@@ -206,6 +203,7 @@ class Button:
 			else:  # Return color to default if button is not hovered or clicked
 				self.hovered = False
 				self.color = WHITE
+
 
 class Slider:
 	def __init__(self, x: int, y: int, length: int, values: list) -> None:
@@ -238,7 +236,6 @@ class Slider:
 		# Default value of slider
 		self.value = min(values)
 
-		
 	def draw(self, win: pygame.Surface) -> None:
 		"""
 		Draws slider to screen
@@ -253,24 +250,26 @@ class Slider:
 		self.rect = pygame.Rect(self.rectX, self.rectY, self.rectW, self.rectH)
 
 		# Draw main line
-		pygame.draw.line(win, GREY, (self.x, self.y), (self.x, self.y + self.length), 2)
+		pygame.draw.line(win, GREY, (self.x, self.y),
+		                 (self.x, self.y + self.length), 2)
 
 		# Draw tick lines
 		for i in range(self.numTicks):
 			gap = self.length // (self.numTicks - 1)
-			pygame.draw.line(win, GREY, (self.x - 5, self.y + gap * i), (self.x + 6, self.y + gap * i), 2)
+			pygame.draw.line(win, GREY, (self.x - 5, self.y + gap * i),
+			                 (self.x + 6, self.y + gap * i), 2)
 
 		# Draw rectangle
 		pygame.draw.rect(win, BLACK, self.rect)
-		
+
 		# Set self.value to nearest value according to rect position on slider and nearest tick
-		nearestTickY = sorted(self.valuesY, key=lambda y: abs(y - (self.rectY + self.rectH // 2)))[0]
+		nearestTickY = sorted(self.valuesY, key=lambda y: abs(
+			y - (self.rectY + self.rectH // 2)))[0]
 		self.value = self.values[self.valuesY.index(nearestTickY)]
 
 		# Attach slider rect to nearest value tick
 		if not dragged:
 			self.rectY = nearestTickY - self.rectH // 2
-
 
 	def getValuesY(self) -> None:
 		"""
@@ -279,7 +278,6 @@ class Slider:
 		gap = self.length // (self.numTicks - 1)
 		for i in range(self.numTicks):
 			self.valuesY.append(self.y + gap * i)
-			
 
 	def move(self) -> None:
 		"""
@@ -289,23 +287,17 @@ class Slider:
 		self.rectY = mouseY + yOff
 
 
-def pickColor():
+def pickColor() -> None:
 	"""
-	Looks at the color of the pixel that is being clicked on
-
-	Returns:
-		pygame.Color: Tuple of (int, int, int) values representing a RGB color
+	Prompts the user to pick a color and then selects that color
 	"""
-	screen = pygame.display.get_surface()  # Load window surface
-	mouse = pygame.mouse.get_pos()
-	pxarray = pygame.PixelArray(screen)  # Load pixels
-	# Get color of pixel at (mouseX, mouseY)
-	pixel = pygame.Color(pxarray[mouse[0], mouse[1]])
-
-	return pixel[1:]  # Don't return alpha value
+	global picked_color
+	color = colorchooser.askcolor()[0]
+	color = tuple(map(int, color))
+	picked_color = color
 
 
-def isEmpty(grid):
+def isEmpty(grid: list) -> bool:
 	"""
 	Checks if the current grid is blank
 
@@ -323,7 +315,7 @@ def isEmpty(grid):
 	return True
 
 
-def useFill():
+def useFill() -> None:
 	"""
 	Function executed when Fill Button is pressed
 	"""
@@ -331,7 +323,7 @@ def useFill():
 	usingFill = not usingFill
 
 
-def clearScreen():
+def clearScreen() -> None:
 	"""
 	Function executed when Clear Screen Button is pressed, resets every spot's color to WHITE
 	"""
@@ -340,7 +332,7 @@ def clearScreen():
 			spot.color = WHITE
 
 
-def useEraser():
+def useEraser() -> None:
 	"""
 	Function executed when Erase Button is pressed
 	"""
@@ -348,7 +340,7 @@ def useEraser():
 	usingEraser = not usingEraser
 
 
-def toggleGrid():
+def toggleGrid() -> None:
 	"""
 	Function executed when Grid Button is pressed
 	"""
@@ -356,7 +348,7 @@ def toggleGrid():
 	showGrid = not showGrid
 
 
-def saveFile():
+def saveFile() -> None:
 	"""
 	When Save Button is pressed, prompt user for location and name of file and create a .txt file with information about the grid
 	"""
@@ -378,7 +370,7 @@ def saveFile():
 		return
 
 
-def openFile():
+def openFile() -> None:
 	"""
 	When Open Button is pressed, prompt user for location and name of file and read color information about grid, then apply to existing grid
 	"""
@@ -407,7 +399,7 @@ def openFile():
 		return
 
 
-def draw(win):
+def draw(win: pygame.Surface) -> None:
 	"""
 	Function for drawing everything to the screen
 
@@ -429,11 +421,9 @@ def draw(win):
 
 	# Draw bounds
 	pygame.draw.line(win, BLACK, (0, 0), (width, 0), 2)
-	pygame.draw.line(win, BLACK, (0, (height - palette.get_height())),
-	                 (width, (height - palette.get_height())), 2)
+	pygame.draw.line(win, BLACK, (0, (height - FUNCTION_AREA)),
+	                 (width, (height - FUNCTION_AREA)), 2)
 
-	# Draw color pallete
-	win.blit(palette, palette_rect)
 
 	pygame.display.update()
 
@@ -443,22 +433,24 @@ grid = [[Spot(i, j) for j in range(COLS)] for i in range(ROWS)]
 
 # Initialize buttons
 buttons = []
-buttons.append(Button(5, 507, 75, 75, 'FILL', useFill, True))  # Fill button
+buttons.append(Button(5, 607, 75, 75, 'FILL', useFill, True))  # Fill button
 # Clear Screen button
-buttons.append(Button(110, 507, 75, 75, 'CLEAR', clearScreen))
-buttons.append(Button(215, 507, 75, 75, 'ERASE',
+buttons.append(Button(110, 607, 75, 75, 'CLEAR', clearScreen))
+buttons.append(Button(215, 607, 75, 75, 'ERASE',
                       useEraser, True))  # Erase button
 
-buttons.append(Button(5, 600, 75, 75, 'SAVE', saveFile))  # Save button
-buttons.append(Button(110, 600, 75, 75, 'OPEN', openFile))  # Open button
+buttons.append(Button(5, 700, 75, 75, 'SAVE', saveFile))  # Save button
+buttons.append(Button(110, 700, 75, 75, 'OPEN', openFile))  # Open button
 # Toggle grid button
-buttons.append(Button(215, 600, 75, 75, 'GRID', toggleGrid))
+buttons.append(Button(215, 700, 75, 75, 'GRID', toggleGrid))
+
+buttons.append(Button(400, 700, 75, 75, 'COLOR', pickColor))
 
 # Initialize slider
-slider = Slider(350, 515, 200, [1, 2, 3, 4, 5])
+slider = Slider(350, 615, 200, [1, 2, 3, 4, 5])
 
 
-def main():
+def main() -> None:
 	"""
 	Main function for executing everything
 	"""
@@ -491,40 +483,30 @@ def main():
 					quit()
 
 			if event.type == pygame.MOUSEBUTTONDOWN:
-				if event.button == 1:
+				if event.button == 1:  # Only if left-mouse button is pressed
 					# Fill spot that is being hovered over
 					for row in grid:
 						for spot in row:
 							if spot.rect.collidepoint(event.pos):
-								if usingFill:  # Flood-fill if user is filling
-									spot.fill(draw_color, spot.color)
-								else:
-									spot.color = draw_color  # Fill single spot
+								spot.setColor(draw_color, spot.color)
 
-					# Call pickColor() if mouse is on color palette
-					if palette_rect.collidepoint(event.pos):
-						picked_color = pickColor()
-					else:
-						dragged = True
-						_, mouseY = event.pos
-						yOff = slider.rectY - mouseY
+					dragged = True
+					_, mouseY = event.pos
+					yOff = slider.rectY - mouseY
 
 					# Click all the buttons, checking collision with mouse is inside the click() method
 					for button in buttons:
 						button.click()
 
 			elif event.type == pygame.MOUSEBUTTONUP:
-				if event.button == 1:
+				if event.button == 1:  # Only if left-mouse button is pressed
 					dragged = False
 
 			if event.type == pygame.MOUSEMOTION and dragged:  # Fill while dragging mouse
 				for row in grid:
 					for spot in row:
 						if spot.rect.collidepoint(event.pos):
-							if usingFill:
-								spot.fill(draw_color, spot.color)
-							else:
-								spot.color = draw_color
+							spot.setColor(draw_color, spot.color)
 
 				if slider.rect.collidepoint(event.pos):
 					slider.move()
