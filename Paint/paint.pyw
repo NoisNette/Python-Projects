@@ -24,7 +24,6 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 LIGHT_GREY = (175, 175, 175)
 GREY = (156, 156, 156)
-FPS = 120
 
 w = 25
 h = 25
@@ -40,6 +39,8 @@ usingFill = False
 usingEraser = False
 showGrid = True
 
+dragged = False
+yOff = 0
 
 class Spot:
 	"""
@@ -206,6 +207,87 @@ class Button:
 				self.hovered = False
 				self.color = WHITE
 
+class Slider:
+	def __init__(self, x: int, y: int, length: int, values: list) -> None:
+		"""
+		Constructor for Slider class
+
+		Args:
+			x (int): x coordinate of top left of slider line
+			y (int): y coordinate of top left of slider line
+			length (int): length of slider
+			values (list): list of values slider can have
+		"""
+		self.x = x
+		self.y = y
+		self.length = length
+		self.values = values
+
+		# Calculate heights of all values on slider
+		self.numTicks = len(self.values)
+		self.valuesY = []
+		self.getValuesY()
+
+		# Attributes for slider rect
+		self.rectW = 30
+		self.rectH = 10
+		self.rectX = x - self.rectW // 2 + 2
+		self.rectY = y - self.rectH // 2
+		self.rect = pygame.Rect(self.rectX, self.rectY, self.rectW, self.rectH)
+
+		# Default value of slider
+		self.value = min(values)
+
+		
+	def draw(self, win: pygame.Surface) -> None:
+		"""
+		Draws slider to screen
+
+		Args:
+			win (Surface): Main display surface
+		"""
+		# Restrict movement of slider rect to it's line
+		minY = self.y - self.rectH // 2
+		maxY = self.y + self.length - self.rectH // 2
+		self.rectY = max(minY, (min(self.rectY, maxY)))
+		self.rect = pygame.Rect(self.rectX, self.rectY, self.rectW, self.rectH)
+
+		# Draw main line
+		pygame.draw.line(win, GREY, (self.x, self.y), (self.x, self.y + self.length), 2)
+
+		# Draw tick lines
+		for i in range(self.numTicks):
+			gap = self.length // (self.numTicks - 1)
+			pygame.draw.line(win, GREY, (self.x - 5, self.y + gap * i), (self.x + 6, self.y + gap * i), 2)
+
+		# Draw rectangle
+		pygame.draw.rect(win, BLACK, self.rect)
+		
+		# Set self.value to nearest value according to rect position on slider and nearest tick
+		nearestTickY = sorted(self.valuesY, key=lambda y: abs(y - (self.rectY + self.rectH // 2)))[0]
+		self.value = self.values[self.valuesY.index(nearestTickY)]
+
+		# Attach slider rect to nearest value tick
+		if not dragged:
+			self.rectY = nearestTickY - self.rectH // 2
+
+
+	def getValuesY(self) -> None:
+		"""
+		Calculates the y heights of all ticks
+		"""
+		gap = self.length // (self.numTicks - 1)
+		for i in range(self.numTicks):
+			self.valuesY.append(self.y + gap * i)
+			
+
+	def move(self) -> None:
+		"""
+		Moves the slider rect when the mouse drags it
+		"""
+		_, mouseY = pygame.mouse.get_pos()
+		self.rectY = mouseY + yOff
+
 
 def pickColor():
 	"""
@@ -311,8 +393,8 @@ def openFile():
 				# Only look at first line since all the data is in the first line
 				compressed_grid = eval(lines[0].strip())
 
-			for i in range(len(grid)):
-				for j in range(len(grid[i])):
+			for i in range(len(compressed_grid)):
+				for j in range(len(compressed_grid[i])):
 					# Update current grid to saved grid
 					grid[i][j].color = compressed_grid[i][j]
 
@@ -343,6 +425,8 @@ def draw(win):
 	for button in buttons:
 		button.draw(win)
 
+	slider.draw(win)
+
 	# Draw bounds
 	pygame.draw.line(win, BLACK, (0, 0), (width, 0), 2)
 	pygame.draw.line(win, BLACK, (0, (height - palette.get_height())),
@@ -370,20 +454,20 @@ buttons.append(Button(110, 600, 75, 75, 'OPEN', openFile))  # Open button
 # Toggle grid button
 buttons.append(Button(215, 600, 75, 75, 'GRID', toggleGrid))
 
+# Initialize slider
+slider = Slider(350, 515, 200, [1, 2, 3, 4, 5])
+
 
 def main():
 	"""
 	Main function for executing everything
 	"""
-	global dragged, draw_color, picked_color
+	global dragged, draw_color, picked_color, yOff
 
 	run = True
-	clock = pygame.time.Clock()
 
 	# Infinite game loop
 	while run:
-		clock.tick(FPS)
-
 		# Draw window
 		draw(win)
 
@@ -407,37 +491,45 @@ def main():
 					quit()
 
 			if event.type == pygame.MOUSEBUTTONDOWN:
-				# Fill spot that is being hovered over
-				for row in grid:
-					for spot in row:
-						if spot.rect.collidepoint(pygame.mouse.get_pos()):
-							if usingFill:  # Flood-fill if user is filling
-								spot.fill(draw_color, spot.color)
-							else:
-								spot.color = draw_color  # Fill single spot
+				if event.button == 1:
+					# Fill spot that is being hovered over
+					for row in grid:
+						for spot in row:
+							if spot.rect.collidepoint(event.pos):
+								if usingFill:  # Flood-fill if user is filling
+									spot.fill(draw_color, spot.color)
+								else:
+									spot.color = draw_color  # Fill single spot
 
-				# Call pickColor() if mouse is on color palette
-				if palette_rect.collidepoint(pygame.mouse.get_pos()):
-					picked_color = pickColor()
-				else:
-					dragged = True
+					# Call pickColor() if mouse is on color palette
+					if palette_rect.collidepoint(event.pos):
+						picked_color = pickColor()
+					else:
+						dragged = True
+						_, mouseY = event.pos
+						yOff = slider.rectY - mouseY
 
-				# Click all the buttons, checking collision with mouse is inside the click() method
-				for button in buttons:
-					button.click()
+					# Click all the buttons, checking collision with mouse is inside the click() method
+					for button in buttons:
+						button.click()
 
 			elif event.type == pygame.MOUSEBUTTONUP:
-				dragged = False
+				if event.button == 1:
+					dragged = False
 
 			if event.type == pygame.MOUSEMOTION and dragged:  # Fill while dragging mouse
 				for row in grid:
 					for spot in row:
-						if spot.rect.collidepoint(pygame.mouse.get_pos()):
+						if spot.rect.collidepoint(event.pos):
 							if usingFill:
 								spot.fill(draw_color, spot.color)
 							else:
 								spot.color = draw_color
 
+				if slider.rect.collidepoint(event.pos):
+					slider.move()
+
 
 # Call main function
-main()
+if __name__ == '__main__':
+	main()
