@@ -26,12 +26,16 @@ WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 LIGHT_GREY = (235, 235, 235)
 FPS = 60
+FONT_PATH = 'assets/Montserrat.ttf'
 clock = pygame.time.Clock()
-fontPath = 'assets/Montserrat.ttf'
+CHOICES = ['rock', 'paper', 'scissors']
 
 # Variables
 playerScore = 0
 computerScore = 0
+playerHand = None
+computerHand = None
+verdict = 0
 
 
 class Button:
@@ -44,6 +48,7 @@ class Button:
 
 		self.caption = caption
 		self.img = self.setImage(imgName)
+		self.id = self.caption.lower()
 
 		self.hovered = False
 		self.hidden = False
@@ -68,7 +73,7 @@ class Button:
 			if self.img:
 				win.blit(self.img, (self.x, self.y))
 
-			font = pygame.font.Font(fontPath, 20)
+			font = pygame.font.Font(FONT_PATH, 20)
 			label = font.render(self.caption, 1, BLACK)
 			win.blit(label, (self.x + self.w // 2 -
                             label.get_width() // 2, self.y + self.h + 10))
@@ -81,19 +86,27 @@ class Button:
 
 	def click(self):
 		if self.hovered and not self.hidden:
-			pass
+			play(self.id)
+
+
+# Objects
+rock = Button(100, 300, 100, 100, 'Rock', 'rock')
+paper = Button(250, 300, 100, 100, 'Paper', 'paper')
+scissors = Button(400, 300, 100, 100, 'Scissors', 'scissors')
+
+btns = [rock, paper, scissors]
 
 
 def draw(win):
 	win.fill(WHITE)
 
 	# Display title
-	font = pygame.font.Font(fontPath, 40)
+	font = pygame.font.Font(FONT_PATH, 40)
 	label = font.render('Rock Paper Scissors', 1, BLACK)
 	win.blit(label, (width // 2 - label.get_width() // 2, 75))
 
 	# Display score
-	font = pygame.font.Font(fontPath, 24)
+	font = pygame.font.Font(FONT_PATH, 24)
 	text = 'Player {} : {} Computer'.format(playerScore, computerScore)
 	label = font.render(text, 1, BLACK)
 	win.blit(label, (width // 2 - label.get_width() // 2, 175))
@@ -105,11 +118,16 @@ def draw(win):
 	pygame.display.update()
 
 
-rock = Button(100, 300, 100, 100, 'Rock', 'rock')
-paper = Button(250, 300, 100, 100, 'Paper', 'paper')
-scissors = Button(400, 300, 100, 100, 'Scissors', 'scissors')
-
-btns = [rock, paper, scissors]
+def play(hand):
+	global playerHand, computerHand, verdict
+	computerHand = random.choice(CHOICES)
+	if hand == 'rock':
+		verdict = 0 if computerHand == 'rock' else -1 if computerHand == 'paper' else 1
+	elif hand == 'paper':
+		verdict = 0 if computerHand == 'paper' else - \
+			1 if computerHand == 'scissors' else 1
+	elif hand == 'scissors':
+		verdict = 0 if computerHand == 'scissors' else -1 if computerHand == 'rock' else 1
 
 
 def main():
