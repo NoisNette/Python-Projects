@@ -293,8 +293,9 @@ def pickColor():
 	"""
 	global picked_color
 	color = colorchooser.askcolor()[0]
-	color = tuple(map(int, color))
-	picked_color = color
+	if color:
+		color = tuple(map(int, color))
+		picked_color = color
 
 
 def isEmpty(grid):
@@ -446,7 +447,7 @@ buttons.append(Button(215, 700, 75, 75, 'GRID', toggleGrid))
 buttons.append(Button(400, 607, 75, 75, 'COLOR', pickColor))
 
 # Initialize slider
-slider = Slider(350, 615, 200, [1, 2, 3, 4, 5])
+slider = Slider(350, 615, 175, [1, 2, 3, 4, 5])
 
 
 def main():
