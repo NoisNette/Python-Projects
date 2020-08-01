@@ -227,8 +227,8 @@ class Slider:
 		self.getValuesY()
 
 		# Attributes for slider rect
-		self.rectW = 30
-		self.rectH = 10
+		self.rectW = 40
+		self.rectH = 15
 		self.rectX = x - self.rectW // 2 + 2
 		self.rectY = y - self.rectH // 2
 		self.rect = pygame.Rect(self.rectX, self.rectY, self.rectW, self.rectH)
@@ -443,7 +443,7 @@ buttons.append(Button(110, 700, 75, 75, 'OPEN', openFile))  # Open button
 # Toggle grid button
 buttons.append(Button(215, 700, 75, 75, 'GRID', toggleGrid))
 
-buttons.append(Button(400, 700, 75, 75, 'COLOR', pickColor))
+buttons.append(Button(400, 607, 75, 75, 'COLOR', pickColor))
 
 # Initialize slider
 slider = Slider(350, 615, 200, [1, 2, 3, 4, 5])
