@@ -1,7 +1,4 @@
-import pygame
-import os
-import random
-
+import pygame, os, random
 
 os.system('cls')
 pygame.init()
@@ -17,8 +14,7 @@ pygame.display.set_icon(pygame.image.load('assets/icon.png'))
 dims = (100, 100)
 rock = pygame.transform.scale(pygame.image.load('assets/rock.png'), dims)
 paper = pygame.transform.scale(pygame.image.load('assets/paper.png'), dims)
-scissors = pygame.transform.scale(
-	pygame.image.load('assets/scissors.png'), dims)
+scissors = pygame.transform.scale(pygame.image.load('assets/scissors.png'), dims)
 
 # Constants
 WHITE = (255, 255, 255)
@@ -40,13 +36,26 @@ playerScore = 0
 computerScore = 0
 playerHand = None
 computerHand = None
-verdict = 0
-shouldDisplayVerdict = False
-incrementedScore = False
+verdict = 0  # Stores the result of the game
+shouldDisplayVerdict = False  # Whether to display result of game or not
+incrementedScore = False  # Checker to make sure score is only incremented once per game instead of every frame
 
 
 class Button:
 	def __init__(self, x, y, w, h, caption=None, imgName=None, function=None, hidden=False):
+		"""
+		Constructor for Button class
+
+		Args:
+			x (int): x coordinate of Button
+			y (int): y coordinate of Button
+			w (int): width of button in pixels
+			h (int): height of button in oixels
+			caption (str, optional): Caption to display for Button. Defaults to None.
+			imgName (str, optional): Name of image to display inside of button. Defaults to None.
+			function (lambda, optional): Function to be executed if button is pressed. Defaults to None.
+			hidden (bool, optional): Whether the button should be hidden upon creation. Defaults to False.
+		"""
 		self.x = x
 		self.y = y
 		self.w = w
@@ -63,35 +72,59 @@ class Button:
 
 
 	def setImage(self, imgName):
+		"""
+		Sets own image
+
+		Args:
+			imgName (str): Name of image to set
+
+		Returns:
+			pygame.Surface: Surface that represents the image
+		"""
 		return IMAGE_DICT.get(imgName, None)
 
 
 	def draw(self, win):
-		if not self.hidden:
-			if self.hovered:
+		"""
+		Displays self to screen
+
+		Args:
+			win (pygame.Surface): Main display surfaace
+		"""
+		if not self.hidden:  # Only display if button is not hidden
+			if self.hovered:  # Highlight button if it is being hovered over
 				pygame.draw.rect(win, LIGHT_GREY, self.rect)
 
-			if self.function is not None:
+			if self.function is not None:  # Draw outline if button hasn't got an image
 				pygame.draw.rect(win, BLACK, self.rect, 3)
 
-			if self.img:
+			if self.img:  # Draw image if button has it
 				win.blit(self.img, (self.x, self.y))
 
-			if self.function is not None:
+			if self.function is not None:  # Draw caption inside button if a function is assigned to it
 				font = pygame.font.Font(FONT_PATH, 30)
 				label = font.render(self.caption, 1, BLACK)
 				win.blit(label, (self.x + self.w // 2 - label.get_width() // 2 + 1, self.y + label.get_height() // 2 - 14))
-			else:
+			else:  # Draw caption under button if there is not a function assigned to it
 				font = pygame.font.Font(FONT_PATH, 20)
 				label = font.render(self.caption, 1, BLACK)
 				win.blit(label, (self.x + self.w // 2 - label.get_width() // 2 + 1, self.y + self.h + 10))
 
 	@property
 	def hovered(self):
+		"""
+		Whether the button is being hovered over using the mouse
+
+		Returns:
+			bool: Result of collision checking button and mouse position
+		"""
 		return self.rect.collidepoint(pygame.mouse.get_pos())
 
 
 	def click(self):
+		"""
+		Execute intended function if button is hovered and not hidden
+		"""
 		if self.hovered and not self.hidden:
 			if self.function is not None:
 				self.function()
@@ -100,10 +133,17 @@ class Button:
 
 
 def play(hand):
+	"""
+	Main logic function
+
+	Args:
+		hand (str): The hand that the player played when clicking a choice button (Rock, Paper, Scissors)
+	"""
 	global playerHand, computerHand, verdict, shouldDisplayVerdict
-	computerHand = random.choice(CHOICES)
+	computerHand = random.choice(CHOICES)  # Computer chooses randomly between Rock, Paper and Scissors
 	playerHand = hand
 
+	# 0 : DRAW; 1 : WIN; -1 : LOSS
 	if hand == 'rock':
 		verdict = 0 if computerHand == 'rock' else -1 if computerHand == 'paper' else 1
 	elif hand == 'paper':
@@ -115,8 +155,12 @@ def play(hand):
 
 
 def displayVerdict():
+	"""
+	Display result of game and increment score if necessary
+	"""
 	global playerScore, computerScore, incrementedScore, shouldDisplayVerdict
 
+	# Hide all buttons except Next button
 	for btn in btns:
 		btn.hidden = True
 
@@ -128,14 +172,14 @@ def displayVerdict():
 	# Load font
 	font = pygame.font.Font(FONT_PATH, 20)
 	
-	# Draw player's hand
+	# Draw player's hand and caption
 	pX = width // 2 - pHand.get_width() - 60
 	pY = height // 2 - pHand.get_height() // 2
 	win.blit(pHand, (pX, pY))
 	pLabel = font.render(playerHand.capitalize(), 1, BLACK)
 	win.blit(pLabel, (pX + pHand.get_width() // 2 - pLabel.get_width() // 2 + 1, pY + pHand.get_height() + 10))
 
-	# Draw computer's hand
+	# Draw computer's hand and caption
 	cX = width // 2 + 60
 	cY = height // 2 - cHand.get_height() // 2
 	win.blit(cHand, (cX, cY))
@@ -157,6 +201,7 @@ def displayVerdict():
 			computerScore += 1
 			incrementedScore = True
 
+	# Display verdict under hands
 	font = pygame.font.Font(FONT_PATH, 32)
 	label = font.render(msg, 1, BLACK)
 	x = width // 2 - label.get_width() // 2
@@ -165,11 +210,15 @@ def displayVerdict():
 
 
 def returnToChoices():
+	"""
+	Lets the player choose his hand once again after displaying te verdict, called when Next button is pressed
+	"""
 	global shouldDisplayVerdict, incrementedScore
 
 	shouldDisplayVerdict = False
 	incrementedScore = False
 
+	# Show all buttons except Next button
 	for btn in btns:
 		btn.hidden = False
 
@@ -177,6 +226,12 @@ def returnToChoices():
 
 
 def draw(win):
+	"""
+	Draws everything to the screen
+
+	Args:
+		win (pygame.Surface): Main display surface
+	"""
 	win.fill(WHITE)
 
 	# Display title
@@ -201,6 +256,9 @@ def draw(win):
 
 
 def main():
+	"""
+	Main game function
+	"""
 	run = True
 	while run:
 		clock.tick(FPS)
