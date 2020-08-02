@@ -8,7 +8,10 @@ from tkinter import colorchooser
 os.system('cls')
 pygame.init()
 pygame.font.init()
-tkinter.Tk().wm_withdraw()
+
+root = tkinter.Tk()
+root.wm_withdraw()
+root.focus_force()
 
 width, height = 800, 800
 win = pygame.display.set_mode((width, height))
@@ -65,6 +68,7 @@ class Spot:
 
 		self.color = WHITE
 
+
 	def draw(self, win):
 		"""
 		Draw self to the display
@@ -76,6 +80,7 @@ class Spot:
 
 		if showGrid:  # Only draw grid if user chooses to
 			pygame.draw.rect(win, GREY, (self.x, self.y, self.w, self.w), 1)
+
 
 	def fill(self, new_color, old_color):
 		"""
@@ -104,6 +109,7 @@ class Spot:
 					grid[i][j + 1].setColor(new_color, old_color)
 		except:
 			return
+
 
 	def setColor(self, new_color, old_color):
 		"""
@@ -151,6 +157,7 @@ class Button:
 		self.hovered = False
 		self.clicked = False
 
+
 	def draw(self, win):
 		"""
 		Draw self to the display
@@ -174,6 +181,7 @@ class Button:
 		y = self.y + self.h // 2 - label.get_height() // 2
 		win.blit(label, (x, y))
 
+
 	def click(self):
 		"""
 		Check if button is clicked and execute function if it is
@@ -181,6 +189,7 @@ class Button:
 		if self.rect.collidepoint(pygame.mouse.get_pos()):
 			self.clicked = not self.clicked
 			self.function()
+
 
 	def hover(self):
 		"""
@@ -236,6 +245,7 @@ class Slider:
 		# Default value of slider
 		self.value = min(values)
 
+
 	def draw(self, win):
 		"""
 		Draws slider to screen
@@ -271,6 +281,7 @@ class Slider:
 		if not dragged:
 			self.rectY = nearestTickY - self.rectH // 2
 
+
 	def getValuesY(self):
 		"""
 		Calculates the y heights of all ticks
@@ -292,7 +303,10 @@ def pickColor():
 	Prompts the user to pick a color and then selects that color
 	"""
 	global picked_color
+
+	# Color returned  in format ((R, G, B), #hexhex), I only want RGB
 	color = colorchooser.askcolor()[0]
+
 	if color:
 		color = tuple(map(int, color))
 		picked_color = color
@@ -425,6 +439,10 @@ def draw(win):
 	pygame.draw.line(win, BLACK, (0, (height - FUNCTION_AREA)),
 	                 (width, (height - FUNCTION_AREA)), 2)
 
+	# Draw chosen color
+	pygame.draw.rect(win, picked_color, (490, 607, 75, 75))
+	pygame.draw.rect(win, BLACK, (490, 607, 75, 75), 4)
+
 	pygame.display.update()
 
 
@@ -439,15 +457,15 @@ buttons.append(Button(110, 607, 75, 75, 'CLEAR', clearScreen))
 buttons.append(Button(215, 607, 75, 75, 'ERASE',
                       useEraser, True))  # Erase button
 
-buttons.append(Button(5, 700, 75, 75, 'SAVE', saveFile))  # Save button
-buttons.append(Button(110, 700, 75, 75, 'OPEN', openFile))  # Open button
+buttons.append(Button(5, 720, 75, 75, 'SAVE', saveFile))  # Save button
+buttons.append(Button(110, 720, 75, 75, 'OPEN', openFile))  # Open button
 # Toggle grid button
-buttons.append(Button(215, 700, 75, 75, 'GRID', toggleGrid))
+buttons.append(Button(215, 720, 75, 75, 'GRID', toggleGrid))
 
 buttons.append(Button(400, 607, 75, 75, 'COLOR', pickColor))
 
 # Initialize slider
-slider = Slider(350, 615, 175, [1, 2, 3, 4, 5])
+slider = Slider(350, 613, 180, [1, 2, 3, 4, 5])
 
 
 def main():
@@ -476,6 +494,7 @@ def main():
 						'Closing...', 'Would you like to save before closing?')
 					if msg:  # Save file if 'Yes' is pressed
 						saveFile()
+						quit()
 					elif msg == False and msg is not None:  # Quit if 'No' is pressed
 						quit()
 					# Continue running if 'Cancel' is pressed
