@@ -2,7 +2,6 @@ import pygame
 import os
 import random
 
-from pygame.ftfont import Font
 
 os.system('cls')
 pygame.init()
@@ -53,6 +52,7 @@ class Button:
 		self.hovered = False
 		self.hidden = False
 
+
 	def setImage(self, imgName):
 		if imgName:
 			if imgName == 'rock':
@@ -62,6 +62,7 @@ class Button:
 			elif imgName == 'scissors':
 				return scissors
 		return None
+
 
 	def draw(self, win):
 		if not self.hidden:
@@ -77,6 +78,7 @@ class Button:
 			label = font.render(self.caption, 1, BLACK)
 			win.blit(label, (self.x + self.w // 2 -
                             label.get_width() // 2, self.y + self.h + 10))
+
 
 	def hover(self):
 		if self.rect.collidepoint(pygame.mouse.get_pos()):
